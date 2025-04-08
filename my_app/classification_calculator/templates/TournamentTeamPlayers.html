@@ -1,0 +1,96 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+	<h3 class="center">
+		<a href="../">{{ tournament.City }} {{ tournament.Year }}</a>
+		<br>
+		{{ team.City }} {{ team.TeamName }}
+	</h3>
+	<div class="row"></div>
+    <div class="row center">
+    	<div class="col s1"></div>
+    	<div class="col s10">
+			{% if submit_details.player_count > 0 %}
+
+				{% if submit_details.player_count == 7 %}
+					<div class="green-text text-darken-3 larger-font">Player Count: {{ submit_details.player_count }}</div>
+				{% elif submit_details.player_count > 7 %}
+					<div class="">
+						<text class="red-text text-darken-4 larger-font">Player Count: {{ submit_details.player_count }}</text>
+						<br>
+						<text>*There are <span class="heavy-font">more</span> than 7 players on the field</text>
+					</div>
+				{% elif submit_details.player_count < 7 %}
+					<div class="">
+						<text class="red-text text-darken-4 larger-font">Player Count: {{ submit_details.player_count }}</text>
+						<br>
+						<text>*There are <span class="heavy-font">less</span> than 7 players on the field</text>
+					</div>
+				{% endif %}
+				{% if submit_details.classification_total <= 21 %}
+					<div class="green-text text-darken-3 larger-font">Classification Total: {{ submit_details.classification_total }}</div>
+				{% elif submit_details.classification_total > 21 %}
+					<div class="">
+						<text class="red-text text-darken-4 larger-font">Classification Total: {{ submit_details.classification_total }}</text>
+						<br>
+						<text>*There are <span class="heavy-font">more</span> than 21 classification points on the field</text>
+					</div>
+				{% endif %}
+		    {% elif submit_details.player_count == 0 %}
+				<text class="red-text text-darken-4 larger-font">Select Players on Field</text>
+				<br>
+				<text>*No players were selected.</text>
+		    {% else %}
+				<text class="larger-font">Select Players on Field</text>
+			{% endif %}
+		</div>
+    	<div class="col s1"></div>
+    </div>
+	<form action="" method="POST">
+		{% csrf_token %}
+		<div class="row">
+			<div class="col l3 m3 s2"></div>
+			<div class="col l7 m7 s9">
+				<table class="centered highlight">
+					<thead>
+						<tr>
+							<th>No.</th>
+							<th>Name</th>
+							<th>Class</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for player in players %}
+							<tr>
+								<td><span class="mid-font heavy-font">#{{ player.PlayerNumber }}</span></td>
+								<td>{{ player.Player.PlayerLastName }}, {{ player.Player.PlayerFirstName }}</td>
+								<td>{{ player.ClassificationValue }}</td>
+								<td>
+									<label>
+										{% if player.id in submitted_tournamentplayer_ids %}
+											<input type="checkbox" class="filled-in" name="players_checked" checked="checked" value={{ player.id }} />
+											<span></span>
+										{% else %}
+											<input type="checkbox" class="filled-in" name="players_checked" value={{ player.id }} />
+											<span></span>
+										{% endif %}
+									</label>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>	
+				</table>
+			</div>
+			<div class="col l2 m2 s1"></div>
+		</div>
+		<div class="row"></div>
+		<div class="row center">
+			<button class="btn waves-effect waves-light btn-large red darken-4" type="submit" name="clear">Clear</button>
+			<button class="btn waves-effect waves-light btn-large blue darken-3" type="submit" name="submit">Submit</button>
+		</div>
+		<div class="row center">
+		</div>
+	</form>
+{% endblock %}

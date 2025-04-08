@@ -1,0 +1,27 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+<div class="row" style="height: 15px;"></div>
+<div class="row"></div>
+
+{% if results_created_players or results_created_update_tournament_players %}
+    <div class="row center green-text text-darken-3 larger-font">
+        <div class="row">
+            <strong>Updates</strong>
+        </div>
+        <div class="row">
+            {% if results_created_players %}
+                {{ results_created_players|length }} New Players Created
+            {% endif %}                            
+            {% if results_created_update_tournament_players %}
+                <br>{{ results_created_update_tournament_players.created|length }} Players Added to Tournaments
+                <br>{{ results_created_update_tournament_players.updated|length }} Players Updated in Tournaments
+            {% endif %}                            
+        </div>
+    </div>
+    <div class="row"></div>
+    <div class="row"></div>
+{% endif %}                            
+
+{% endblock %}

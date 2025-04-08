@@ -1,0 +1,137 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+    <div class="row" style="height: 15px;"></div>
+    <div class="row"></div>
+    <div class="row">
+        <div class="col l3 m3 s1"></div>
+        <div class="col l2 m2 s5">
+            <div class="row center">
+                <h5>Tournaments</h5>
+                (City - Year)
+            </div>
+            <div class="row" style="height:250px;overflow:auto;">
+                <table>
+                    {% for tournament in tournaments %}
+                        <tr>
+                            <td class="center">{{ tournament.City }} - {{ tournament.Year }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="col l2 m2 s0"></div>
+        <div class="col l2 m2 s5">
+            <div class="row center">
+                <h5>Teams</h5>
+                (City - Name)
+            </div>
+            <div class="row" style="height:250px;overflow:auto;">
+                <table>
+                    {% for team in teams %}
+                        <tr>
+                            <td class="center">{{ team.City }} - {{ team.TeamName }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="col l3 m3 s1"></div>
+    </div>
+    <div class="row center">
+        <div class="col s3"></div>
+        <div class="col s6">
+            <h5>Add or Update Players in Tournaments</h5>
+        </div>
+    </div>
+    <div class="row"></div>
+    {% if upload_error_message %}
+        <div class="row"></div>
+        <div class="row center">{{ upload_error_message }}</div>
+        <div class="row"></div>
+    {% endif %}
+    <div class="row col s12 center">
+        <div class="col s2 m4"></div>
+            <div class="col s8 m4">
+                <form action="./" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="file-field input-field">
+                            <div class="btn red darken-4">
+                                <span>File</span>
+                                <input type="file" name="upload_file">
+                            </div>
+                            <div class="file-path-wrapper">
+                                <input class="file-path validate" type="text">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="waves-effect waves-light btn-large red darken-4" type="submit" value="submit">Upload</button>
+                        </div>
+                        <div class="row">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        <div class="col s2 m4"></div>
+        <div class="row"></div>
+        <div class="row center">
+            <div class="row">
+                <button data-target="upload_requirements" class="waves-effect waves-light btn-small modal-trigger blue darken-3" >See Requirements</button>
+            </div>
+            <div class="row">
+                <a href="/upload/template/">tournament_player_upload_template.csv</a>
+            </div>
+        </div>
+        <div class="col s3"></div>
+
+    </div>
+
+
+    <!-- Modal Structure -->
+    <div id="upload_requirements" class="modal">
+      <div class="modal-content">
+        <div class="center">
+            <h4>Upload Requirements</h4>
+        </div>
+        <div class="row">
+            <div class="col" style="width:2%;"></div>
+            <div>
+                <ul class="col bulleted browser-default">
+                    <li>
+                        Required columns:
+                        <i>
+                            tournament_city, tournament_year, player_first_name, player_last_name, player_team_city, player_team_name, player_number, player_classification_value
+                        </i>
+                        (see download link below)
+                    </li>
+                    <li>
+                        No field or cell can be empty or blank
+                    </li>
+                    <li>
+                        All values in <i>tournmanet_city</i> and <i>tournament_year</i> must respectively match with an existing tournamnet (see above on main page)
+                    </li>
+                    <li>
+                        All values in <i>player_team_city</i> and <i>player_team_name</i> must respectively match with an existing team (see above on main page)
+                    </li>
+                    <li>
+                        All values in <i>player_classification_value</i> must be between 1-5
+                    </li>
+                    <li>
+                        All values in <i>player_number</i> must be between 0-99
+                    </li>
+                </ul>
+            </div>
+            <div class="col" style="width:2%;"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+            <div class="center">
+                <a href="#!" class="white-text modal-close waves-effect btn-flat red darken-4">Close</a>
+            </div>
+        </div>
+        <div class="row"></div>
+    </div>
+
+{% endblock %}

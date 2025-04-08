@@ -1,0 +1,39 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+    <div class="row" style="height: 15px;"></div>
+    <div class="row center">
+        <h5>Login</h5>
+    </div>
+    <div class="row col s12 center">
+        <div class="col s2 m4"></div>
+            <div class="col s8 m4">
+                <form action="./" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="row">
+                            <div class="input-field">
+                                <input id="username" name="username" type="text" required autofocus>
+                                <label class="active" for="username">username</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field">
+                                <input id="password" name="password" type="password" required>
+                                <label class="active" for="password">password</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="waves-effect waves-light btn-large" type="submit" value="submit">Login</button>
+                        </div>
+                        <div class="row">
+                            {{ response }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        <div class="col s2 m4"></div>
+    </div>
+
+{% endblock %}

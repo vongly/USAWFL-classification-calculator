@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+        <style type="text/css">
+            .center {
+                text-align: center;
+            }
+            .smallpadding {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .larger-font {
+                font-size: 24px;
+            }
+            .mid-font {
+                font-size: 18px;
+            }
+            .heavy-font {
+                font-weight:bold;
+            }
+            nav {
+                min-height: 80px;
+                vertical-align: center;
+            }
+            .logo-image {
+                height: 53px;
+                padding: 0px;
+                width: auto;
+            }
+            ul.bulleted {
+                list-style: disc outside;
+                margin-left: 20px;
+            }
+        </style>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var elems = document.querySelectorAll('.modal');
+                var instances = M.Modal.init(elems);
+
+                var elem = document.querySelector('.sidenav');
+                var instance = new M.Sidenav(elem, {edge:'right'});
+
+				var drop=document.querySelectorAll('.dropdown-trigger')
+					M.Dropdown.init(drop,{
+						onClick: true,
+						coverTrigger: false,
+						closeOnClick: true,
+					});            
+
+            });
+        </script>
+
+    </head>
+
+
+
+	<ul id="header-dropdown" class="dropdown-content">
+		{% if admin_url %}
+			<li><a href="{{ admin_url }}/login/" style="padding-top:10px;">Admin</a></li>
+			<li><a href="/upload/" style="padding-top:10px;">Upload</a></li>
+			<li><a href="/logout/" style="padding-top:10px;">Logout</a></li>
+		{% else %}
+			<li><a href="/login/" style="padding-top:10px;">Login</a></li>
+		{% endif %}
+	</ul>
+	<ul id="mobile-links" class="sidenav" style="width: 60%;">
+        <li style="padding-top: 15px;"></li>
+		{% if admin_url %}
+			<li><a href="{{ admin_url }}/login/" style="padding-top:10px;">Admin</a></li>
+			<li><a href="/upload/" style="padding-top:10px;">Upload</a></li>
+			<li><a href="/logout/" style="padding-top:10px;">Logout</a></li>
+		{% else %}
+			<li><a href="/login/" style="padding-top:10px;">Login</a></li>
+		{% endif %}
+	</ul>
+    <nav>
+        <div class="nav-wrapper blue darken-3">
+            <a href="/" class="brand-logo center" style="padding-top:12px;"><img class="logo-image" src="https://moveunitedsport.org/app/uploads/2024/06/MoveUnited_USAWFL_Logo_White.png"></a>
+			<a href="#" data-target="mobile-links" class="sidenav-trigger right"><i class="material-icons" style="font-size: 35px; padding-top: 12px;">menu</i></a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+				<li>
+					{% if admin_url %}
+						<a class="dropdown-trigger center" href="#!" data-target="header-dropdown" style="width: 150px; padding-top: 10px;">Account</a>
+					{% else %}
+						<li><a class="center" href="/login/" style="padding-top:10px; width: 150px;">Login</a></li>
+					{% endif %}
+				</li>
+			</ul>
+        </div>
+    </nav>
+
+
+    {% block content %}
+    {% endblock %}
+</html>
