@@ -5,13 +5,13 @@
     <div class="row" style="height: 15px;"></div>
     <div class="row"></div>
     <div class="row">
-        <div class="col l3 m3 s1"></div>
+        <div class="col l4 m4 s1"></div>
         <div class="col l2 m2 s5">
             <div class="row center">
                 <h5>Tournaments</h5>
                 (City - Year)
             </div>
-            <div class="row" style="height:250px;overflow:auto;">
+            <div class="row" style="height:250px; overflow:auto; margin-right: 1px;">
                 <table>
                     {% for tournament in tournaments %}
                         <tr>
@@ -21,13 +21,12 @@
                 </table>
             </div>
         </div>
-        <div class="col l2 m2 s0"></div>
         <div class="col l2 m2 s5">
             <div class="row center">
                 <h5>Teams</h5>
                 (City - Name)
             </div>
-            <div class="row" style="height:250px;overflow:auto;">
+            <div class="row" style="height:250px; overflow:auto; margin-left: 1px;">
                 <table>
                     {% for team in teams %}
                         <tr>
@@ -37,7 +36,7 @@
                 </table>
             </div>
         </div>
-        <div class="col l3 m3 s1"></div>
+        <div class="col l4 m4 s1"></div>
     </div>
     <div class="row center">
         <div class="col s3"></div>
