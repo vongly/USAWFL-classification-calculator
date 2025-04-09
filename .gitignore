@@ -1,4 +1,5 @@
 *.pyc
+*DS_Store
 venv/
 api_app/db.sqlite3
 api_app/usawfl.sqlite3
