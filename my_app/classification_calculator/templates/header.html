@@ -37,6 +37,17 @@
                 list-style: disc outside;
                 margin-left: 20px;
             }
+            .dropdown-content li > a, .dropdown-content li > span {
+                color: #1565c0 !important;
+                padding-top: 10px;
+                text-align: center;
+            }
+            .sidenav li > a, .sidenav li > span {
+                color: #1565c0 !important;
+                margin-right: 20px;
+                padding-top: 10px;
+                text-align: right;
+            }
         </style>
 
         <script>
@@ -59,25 +70,27 @@
 
     </head>
 
-
+    
 
 	<ul id="header-dropdown" class="dropdown-content">
-		{% if admin_url %}
-			<li><a href="{{ admin_url }}/login/" style="padding-top:10px;">Admin</a></li>
-			<li><a href="/upload/" style="padding-top:10px;">Upload</a></li>
-			<li><a href="/logout/" style="padding-top:10px;">Logout</a></li>
-		{% else %}
-			<li><a href="/login/" style="padding-top:10px;">Login</a></li>
-		{% endif %}
+		<strong>
+            {% if admin_url %}
+                <li><a href="{{ admin_url }}/login/">Admin</a></li>
+                <li><a href="/upload/">Upload</a></li>
+                <li><a href="/logout/">Logout</a></li>
+            {% else %}
+                <li><a href="/login/">Login</a></li>
+            {% endif %}
+        </strong>
 	</ul>
-	<ul id="mobile-links" class="sidenav" style="width: 60%;">
+	<ul id="mobile-links" class="sidenav" style="width: 45%;">
         <li style="padding-top: 15px;"></li>
 		{% if admin_url %}
-			<li><a href="{{ admin_url }}/login/" style="padding-top:10px;">Admin</a></li>
-			<li><a href="/upload/" style="padding-top:10px;">Upload</a></li>
-			<li><a href="/logout/" style="padding-top:10px;">Logout</a></li>
+			<li><a href="{{ admin_url }}/login/">Admin</a></li>
+			<li><a href="/upload/">Upload</a></li>
+			<li><a href="/logout/">Logout</a></li>
 		{% else %}
-			<li><a href="/login/" style="padding-top:10px;">Login</a></li>
+			<li><a href="/login/">Login</a></li>
 		{% endif %}
 	</ul>
     <nav>
@@ -87,7 +100,7 @@
             <ul id="nav-mobile" class="right hide-on-med-and-down">
 				<li>
 					{% if admin_url %}
-						<a class="dropdown-trigger center" href="#!" data-target="header-dropdown" style="width: 150px; padding-top: 10px;">Account</a>
+						<a class="dropdown-trigger center" href="#!" data-target="header-dropdown" style="width: 170px; padding-top: 10px; padding-right: 10px;">Account</a>
 					{% else %}
 						<li><a class="center" href="/login/" style="padding-top:10px; width: 150px;">Login</a></li>
 					{% endif %}

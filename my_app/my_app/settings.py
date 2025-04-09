@@ -3,13 +3,13 @@ import os
 import sys
 
 sys.path.append('../')
-from env import MY_SECRET_KEY
+from env import MY_SECRET_KEY, MY_ALLOWED_HOSTS, DEBUG_SETTING
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = MY_SECRET_KEY
-DEBUG = True
+DEBUG = DEBUG_SETTING
 APPEND_SLASH = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = MY_ALLOWED_HOSTS
 
 INSTALLED_APPS = [
     'django.contrib.admin',
