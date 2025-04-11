@@ -19,7 +19,7 @@ def refresh_token(request):
     previous_url = request.session['previous_url']
 
     try:
-        url = f'{ api_base_url }/refresh/'
+        url = f'{ api_base_url }/token/refresh/'
         call = requests.post(url=url, data={'refresh': request.COOKIES.get(f'{ token_name }_refresh')})
         tokens = call.json()
 
@@ -50,6 +50,8 @@ def refresh_token(request):
 
 def login(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
+
+    user = None
     admin_url = None
 
     if access_token:
@@ -57,10 +59,16 @@ def login(request):
             'Authorization': f'Bearer { access_token }'
         }
         try:
-            jwt.decode(access_token, API_KEY, algorithms='HS256')
+            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
+            user_id = payload.get('user_id')
+            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
+            
+            if user['is_staff']:
+                admin_url = f'{ api_base_url }/admin'
         except:
-            request.session['previous_session'] = request.path
-            HttpResponseRedirect('/refresh/')
+            request.session['previous_url'] = request.path
+            return HttpResponseRedirect('/refresh/')
+
         return HttpResponseRedirect('/')
 
     if request.method == 'POST':
@@ -95,6 +103,7 @@ def login(request):
         elif call_validate_user.status_code == 401:
             response = 'Incorrect username or password'
             return render(request, 'login.html', {
+                    'user': user,
                     'admin_url': admin_url,
                     'request': request,
                     'response': response,
@@ -103,6 +112,7 @@ def login(request):
         else:
             response = call_validate_user.status_code
             return render(request, 'login.html', {
+                    'user': user,
                     'admin_url': admin_url,
                     'request': request,
                     'response': response,
@@ -110,6 +120,7 @@ def login(request):
             )
 
     return render(request, 'login.html',{
+            'user': user,
             'admin_url': admin_url,
         }
     )
@@ -127,6 +138,7 @@ def logout(request):
 def upload_update(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
 
+    user = None
     admin_url = None
 
     if access_token:
@@ -140,6 +152,8 @@ def upload_update(request):
             
             if user['is_staff']:
                 admin_url = f'{ api_base_url }/admin'
+            else:
+                return HttpResponseRedirect('/')
         except:
             request.session['previous_url'] = request.path
             return HttpResponseRedirect('/refresh/')
@@ -287,6 +301,7 @@ def upload_update(request):
             print(upload_error_message)
 
             return render(request, 'upload_update.html', {
+                    'user': user,
                     'admin_url': admin_url,
                     'tournaments': tournaments,
                     'teams': teams,
@@ -385,6 +400,7 @@ def upload_update(request):
         return redirect('/upload/success/')
 
     return render(request, 'upload_update.html', {
+            'user': user,
             'admin_url': admin_url,
             'tournaments': tournaments,
             'teams': teams,
@@ -393,6 +409,9 @@ def upload_update(request):
 
 def upload_update_success(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
+
+    user = None
+    admin_url = None
 
     if access_token:
         try:
@@ -404,8 +423,6 @@ def upload_update_success(request):
         headers = {
             'Authorization': f'Bearer { access_token }'
         }
-
-    admin_url = None
 
     if access_token:
         headers = {
@@ -436,6 +453,7 @@ def upload_update_success(request):
         results_created_update_tournament_players = None
 
     return render(request, 'upload_update_success.html', {
+            'user': user,
             'admin_url': admin_url,
             'results_created_players': results_created_players,
             'results_created_update_tournament_players': results_created_update_tournament_players,
@@ -455,8 +473,6 @@ def download_upload_template(request):
         headers = {
             'Authorization': f'Bearer { access_token }'
         }
-
-    admin_url = None
 
     if access_token:
         try:

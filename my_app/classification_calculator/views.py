@@ -10,6 +10,7 @@ admin_url = None
 def TournamentList(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
 
+    user = None
     admin_url = None
 
     if access_token:
@@ -35,15 +36,17 @@ def TournamentList(request):
     years = sorted(set(item['Year'] for item in tournaments), reverse=True)
 
     return render(request, 'TournamentList.html', {
-            'admin_url':admin_url,
-            'tournaments':tournaments,
-            'years':years,
+            'user': user,
+            'admin_url': admin_url,
+            'tournaments': tournaments,
+            'years': years,
         }
     )
 
 def TournamentTeams(request, tournament_slug):
     access_token = request.COOKIES.get(f'{ token_name }_access')
 
+    user = None
     admin_url = None
 
     if access_token:
@@ -69,6 +72,7 @@ def TournamentTeams(request, tournament_slug):
     teams_in_tournament = call_teams_in_tournament.json()
 
     return render(request, 'TournamentTeams.html', {
+            'user': user,
             'admin_url':admin_url,
             'teams_in_tournament':teams_in_tournament,
             'tournament':tournament,
@@ -78,6 +82,7 @@ def TournamentTeams(request, tournament_slug):
 def TournamentTeamPlayers(request, tournament_slug, team_slug):
     access_token = request.COOKIES.get(f'{ token_name }_access')
 
+    user = None
     admin_url = None
 
     if access_token:
@@ -134,6 +139,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
                     player['player_submitted'] = 0
 
             return render(request, 'TournamentTeamPlayers.html', {
+                    'user': user,
                     'admin_url':admin_url,
                     'players':players,
                     'tournament':tournament,
@@ -144,6 +150,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
             )
 
     return render(request, 'TournamentTeamPlayers.html', {
+            'user': user,
             'admin_url':admin_url,
             'players':players,
             'tournament':tournament,

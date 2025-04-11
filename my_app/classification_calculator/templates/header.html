@@ -75,8 +75,10 @@
 	<ul id="header-dropdown" class="dropdown-content">
 		<strong>
             {% if admin_url %}
-                <li><a href="{{ admin_url }}/login/">Admin</a></li>
-                <li><a href="/upload/">Upload</a></li>
+                {% if user.is_staff %}
+                    <li><a href="{{ admin_url }}/login/">Admin</a></li>
+                    <li><a href="/upload/">Upload</a></li>
+                {% endif %}
                 <li><a href="/logout/">Logout</a></li>
             {% else %}
                 <li><a href="/login/">Login</a></li>
@@ -86,9 +88,11 @@
 	<ul id="mobile-links" class="sidenav" style="width: 45%;">
         <li style="padding-top: 15px;"></li>
 		{% if admin_url %}
-			<li><a href="{{ admin_url }}/login/">Admin</a></li>
-			<li><a href="/upload/">Upload</a></li>
-			<li><a href="/logout/">Logout</a></li>
+            {% if user.is_staff %}
+                <li><a href="{{ admin_url }}/login/">Admin</a></li>
+                <li><a href="/upload/">Upload</a></li>
+            {% endif %}
+            <li><a href="/logout/">Logout</a></li>
 		{% else %}
 			<li><a href="/login/">Login</a></li>
 		{% endif %}
@@ -109,7 +113,7 @@
         </div>
     </nav>
 
-
     {% block content %}
     {% endblock %}
+
 </html>
