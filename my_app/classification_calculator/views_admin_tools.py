@@ -207,13 +207,18 @@ def upload_update(request):
     call_teams = requests.get(url=url_teams)
     teams = call_teams.json()
 
-    url_tournament_players = f'{ api_base_url }/tournament_players/'
-    call_tournament_players = requests.get(url=url_tournament_players)
-    tournament_players = call_tournament_players.json()
-
     if request.method == 'POST':
         upload_file = request.FILES.get('upload_file')
 
+        if not upload_file:
+            return render(request, 'upload_update.html', {
+                    'user': user,
+                    'admin_url': admin_url,
+                    'tournaments': tournaments,
+                    'teams': teams,
+                    'upload_error_message' : 'No File Uploaded',
+                }
+            )
 
         # Dataframe
         df = pd.read_csv(upload_file)
@@ -254,6 +259,9 @@ def upload_update(request):
             if len(tournaments_that_dont_exist) > 0:
                 upload_error_message = f'The following tournaments do not exist: { ", ".join(tournaments_that_dont_exist).title() }. Make sure that all uploaded tournament cities and corresponding years exist. '
 
+            tournament_slug_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['slug'] for t in tournaments }
+            tournament_slugs = df['tournament_city_year_combo'].map(tournament_slug_lookup).to_list()
+
             tournament_id_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['ID'] for t in tournaments }
             df['Tournament_id'] = df['tournament_city_year_combo'].map(tournament_id_lookup)
         except:
@@ -268,8 +276,13 @@ def upload_update(request):
             if len(teams_that_dont_exist) > 0:
                 upload_error_message = f'The following tournaments do not exist: { ", ".join(teams_that_dont_exist).title() }. Make sure that all uploaded team cities and corresponding teams exist. '
 
+            team_slug_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['slug'] for t in teams }
+            team_slugs = df['team_city_name_combo'].map(team_slug_lookup).to_list()
+
             team_id_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['ID'] for t in teams }
             df['Team_id'] = df['team_city_name_combo'].map(team_id_lookup)
+            print(df)
+            print(team_slugs)
         except:
             pass
 
@@ -311,6 +324,11 @@ def upload_update(request):
 
         df = df.astype(dtype_map)
 
+        tournament_teams_filter_string = f'?tournament={ "&tournament=".join(tournament_slugs) }&team={ "&team=".join(team_slugs) }'
+        url_tournament_players = f'{ api_base_url }/tournament_players/{ tournament_teams_filter_string }'
+        call_tournament_players = requests.get(url=url_tournament_players)
+        tournament_players = call_tournament_players.json()
+
         url_players = f'{ api_base_url }/players/'
         call_players = requests.get(url=url_players)
         players = call_players.json()
@@ -336,9 +354,8 @@ def upload_update(request):
         data_create_players = df_players_to_upload.to_dict(orient='Records')
 
         # Upload df_players_to_upload into Players model
-        url_create_players = api_base_url + '/create/players/'
         call_create_players = requests.post(
-            url = url_create_players,
+            url = url_players,
             json = data_create_players,
             headers = headers,
         )
@@ -442,21 +459,44 @@ def upload_update_success(request):
     elif not access_token:
         return HttpResponseRedirect('/')
 
-    try:
-        results_created_players = request.session.get('results_created_players', None)
-    except:
-        results_created_players = None
+    results_created_players = request.session.get('results_created_players', None)
+    results_created_update_tournament_players = request.session.get('results_created_update_tournament_players', None)
 
-    try:
-        results_created_update_tournament_players = request.session.get('results_created_update_tournament_players', None)
-    except:
-        results_created_update_tournament_players = None
+    if results_created_players:
+        player_ids = [ str(player['ID']) for player in results_created_players ]
+        player_ids_string = f'?pid={ "&pid=".join(player_ids) }'
+
+        url  = f'{ api_base_url }/players/{ player_ids_string }'
+        call = requests.get(url=url)
+        players_created = call.json()
+    else:
+        players_created = []
+    if results_created_update_tournament_players:
+        if results_created_update_tournament_players['created'] != []:
+            tournament_player_ids = [ str(tp['id']) for tp in results_created_update_tournament_players['created'] ]
+            tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
+
+            url  = f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }'
+            call = requests.get(url=url)
+            tournament_players_created = call.json()
+        else:
+            tournament_players_created = []
+        if results_created_update_tournament_players['updated'] != []:
+            tournament_player_ids = [ str(tp['id']) for tp in results_created_update_tournament_players['updated'] ]
+            tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
+
+            url  = f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }'
+            call = requests.get(url=url)
+            tournament_players_updated = call.json()
+        else:
+            tournament_players_updated = []
 
     return render(request, 'upload_update_success.html', {
             'user': user,
             'admin_url': admin_url,
-            'results_created_players': results_created_players,
-            'results_created_update_tournament_players': results_created_update_tournament_players,
+            'players_created': players_created,
+            'tournament_players_created': tournament_players_created,
+            'tournament_players_updated': tournament_players_updated,
         }
     )
 

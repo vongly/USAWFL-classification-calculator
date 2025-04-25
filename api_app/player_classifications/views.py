@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 from rest_framework import permissions
-from .permissions import IsStaffUser
+from .permissions import IsStaffUser, CreateOnlyAuthenticated
 
 from rest_framework import status
 from rest_framework.generics import (
@@ -30,45 +30,46 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.MyTokenObtainPairSerializer
 
-# UserModel
+# Django UserModel
 class UserViewSet(RetrieveAPIView):
+        
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     lookup_field = 'id'
-    permission_classes = [IsStaffUser]
 
 # Tournaments
 
-class TournamentList(ListAPIView):
-
+class TournamentList(ListCreateAPIView):
     serializer_class = serializers.TournamentSerializer
     queryset = models.Tournament.objects.all()
 
-class TournamentRecord(RetrieveAPIView):
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
+class TournamentRecord(RetrieveAPIView):
     serializer_class = serializers.TournamentSerializer
     queryset = models.Tournament.objects.all()
     lookup_field = 'slug'
 
-class TournamentCreate(CreateAPIView):
-
-    serializer_class = serializers.TournamentSerializer
-    queryset = models.Tournament.objects.all()
-    permission_classes = [IsStaffUser]
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
 # Teams
 
-class TeamList(ListAPIView):
-
+class TeamList(ListCreateAPIView):
     serializer_class = serializers.TeamSerializer
     
     def get_queryset(self):
 
         tournament_slug = self.request.query_params.get('tournament', None)
+
         if tournament_slug:
             all_players_in_tournament = models.TournamentPlayer.objects.all().filter(Tournament__slug=tournament_slug)
             teams_in_tournament = list(all_players_in_tournament.values('Player__Team').distinct())
-
             teams_in_tournament_list = [ item['Player__Team'] for item in teams_in_tournament]
 
             queryset = models.Team.objects.all().filter(ID__in=teams_in_tournament_list).order_by('TeamName')
@@ -77,35 +78,60 @@ class TeamList(ListAPIView):
         
         return queryset
 
-class TeamRecord(RetrieveAPIView):
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
+class TeamRecord(RetrieveAPIView):
     serializer_class = serializers.TeamSerializer
     queryset = models.Team.objects.all()
     lookup_field = 'slug'    
 
-class TeamCreate(CreateAPIView):
-
-    serializer_class = serializers.TeamSerializer
-    queryset = models.Team.objects.all()
-    permission_classes = [IsStaffUser]
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
 # Players
 
-class PlayerList(ListAPIView):
+class PlayerList(ListCreateAPIView):
 
-    serializer_class = serializers.PlayerSerializer
-    queryset = models.Player.objects.all()
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            serializer_class = serializers.PlayerSerializer
+            return serializer_class
+        serializer_class = serializers.PlayerCreateSerializer
+        return serializer_class
 
+    def get_queryset(self):
+        team_slugs = self.request.query_params.getlist('team', None)
+        player_ids = self.request.query_params.getlist('pid', None)
 
-class PlayerCreate(CreateAPIView):
-    permission_classes = [IsStaffUser]
+        if team_slugs and player_ids:
+            try:
+                player_ids = [ int(player_id) for player_id in player_ids ]
+                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs, ID__in=player_ids).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+            except:
+                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+        elif team_slugs:
+            queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+        elif player_ids:
+            try:
+                player_ids = [ int(player_id) for player_id in player_ids ]
+                queryset = models.Player.objects.all().filter(ID__in=player_ids).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+            except:
+                pass
+        else:
+            queryset = models.Player.objects.all()
+        
+        return queryset
 
-    serializer_class = serializers.PlayerCreateSerializer
-    queryset = models.Player.objects.all()
 
     def create(self, request, *args, **kwargs):
-        is_many = isinstance(request.data, list)
         
+        is_many = isinstance(request.data, list)
+
         if is_many and len(request.data) == 0:
             return Response([], status=status.HTTP_201_CREATED)
         
@@ -120,47 +146,54 @@ class PlayerCreate(CreateAPIView):
     def perform_create(self, serializer):
         serializer.save()
 
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
 # TournamentPlayers
 
 class TournamentPlayerList(ListAPIView):
-
-    serializer_class = serializers.TournamentPlayerSerializer
+    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            serializer_class = serializers.TournamentPlayerSerializer
+            return serializer_class
+        serializer_class = serializers.TournamentPlayerCreateSerializer
+        return serializer_class
 
     def get_queryset(self):
 
-        team_slug = self.request.query_params.get('team', None)
-        tournament_slug = self.request.query_params.get('tournament', None)
+        tournament_player_ids = self.request.query_params.getlist('tpid', None)
+        player_ids = self.request.query_params.getlist('pid', None)
 
-        if tournament_slug and team_slug:
-            queryset = models.TournamentPlayer.objects.all().filter(Tournament__slug=tournament_slug, Player__Team__slug=team_slug).order_by('PlayerNumber')
-        elif tournament_slug:
-            queryset = models.TournamentPlayer.objects.all().filter(Tournament__slug=tournament_slug).order_by('Player__Team__TeamName','PlayerNumber')
+        tournament_slugs = self.request.query_params.getlist('tournament', None)
+        team_slugs = self.request.query_params.getlist('team', None)
+
+        if tournament_player_ids:
+            tournament_player_ids = [ int(tournament_player_id) for tournament_player_id in tournament_player_ids ]
+            queryset = models.TournamentPlayer.objects.all().filter(id__in=tournament_player_ids).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+        elif player_ids:
+            player_ids = [ int(player_id) for player_id in player_ids ]
+            queryset = models.TournamentPlayer.objects.all().filter(Player__ID__in=player_ids).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+        elif tournament_slugs and team_slugs:
+            queryset = models.TournamentPlayer.objects.all().filter(Tournament__slug__in=tournament_slugs, Player__Team__slug__in=team_slugs).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+        elif tournament_slugs:
+            queryset = models.TournamentPlayer.objects.filter(Tournament__slug__in=tournament_slugs).order_by('Player__Team__TeamName','PlayerNumber')
+        elif team_slugs:
+            queryset = models.TournamentPlayer.objects.all().filter(Player__Team__slug__in=team_slugs).order_by('-Tournament__Year','-Tournament__TournamentNumber','PlayerNumber')
         else:
             queryset = models.TournamentPlayer.objects.all().order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
         
         return queryset
 
-class TournamentPlayerFilter(ListAPIView):
-
-    serializer_class = serializers.TournamentPlayerSerializer
-
-    def filter_queryset(self, request, queryset, view):
-
-        ids = request.query_params.get('id', None)
-
-        if ids:
-            ids = ids.split(',')
-            ids = [int(id) for id in ids]
-
-            queryset = models.TournamentPlayer.objects.all().filter(id__in=ids)
-        else:
-            queryset = models.TournamentPlayer.objects.all().order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
-        
-        return queryset
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
 
 class TournamentPlayerCreateUpdate(APIView):
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsStaffUser()]
 
     def post(self, request, *args, **kwargs):
         data = request.data
@@ -196,4 +229,10 @@ class TournamentPlayerCreateUpdate(APIView):
             'updated': serializers.TournamentPlayerCreateSerializer(updated, many=True).data,
             'errors': errors
         }
+
         return Response(result, status=status.HTTP_200_OK)
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]

@@ -17,19 +17,18 @@ urlpatterns = [
     #   Tournaments
     path('tournaments/', views.TournamentList.as_view()),
     path('tournaments/<slug:slug>/', views.TournamentRecord.as_view()),
-    path('create/tournaments/', views.TournamentCreate.as_view()),
 
     #   Teams
     path('teams/', views.TeamList.as_view()),
     path('teams/<slug:slug>/', views.TeamRecord.as_view()),
-    path('teams/', views.TeamList.as_view()),
 
     #   Players
     path('players/', views.PlayerList.as_view()),
-    path('create/players/', views.PlayerCreate.as_view()),
 
     #   TournamentPlayers
     path('tournament_players/', views.TournamentPlayerList.as_view()),
+
+    #   TournamentPlayers - specific upload/update view
     path('create_update/tournament_players/', views.TournamentPlayerCreateUpdate.as_view()),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)

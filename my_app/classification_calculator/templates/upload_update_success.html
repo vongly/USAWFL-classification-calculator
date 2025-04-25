@@ -4,24 +4,80 @@
 
 <div class="row" style="height: 15px;"></div>
 <div class="row"></div>
-
-{% if results_created_players or results_created_update_tournament_players %}
+<div class="row">
     <div class="row center green-text text-darken-3 larger-font">
-        <div class="row">
-            <strong>Updates</strong>
-        </div>
-        <div class="row">
-            {% if results_created_players %}
-                {{ results_created_players|length }} New Players Created
-            {% endif %}                            
-            {% if results_created_update_tournament_players %}
-                <br>{{ results_created_update_tournament_players.created|length }} Players Added to Tournaments
-                <br>{{ results_created_update_tournament_players.updated|length }} Players Updated in Tournaments
-            {% endif %}                            
-        </div>
+        <strong>Updates</strong>
     </div>
-    <div class="row"></div>
-    <div class="row"></div>
-{% endif %}                            
+    <div class="row">
+        <ul>
+            {% if players_created %}
+                <div class="row"></div>
+                <li>
+                    <div class="row center green-text text-darken-3 larger-font">
+                        {{ players_created|length }} New Players Created
+                    </div>
+                    <div class="row">
+                        <div class="col l4 m4 s0"></div>
+                        <div class="col l4 m4 s12">
+                            <ol>
+                                {% for player in players_created %}
+                                <li>
+                                    {{ player.Team.City }} {{ player.Team.TeamName }} - {{ player.PlayerFirstName }}, {{ player.PlayerLastName }}
+                                </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                        <div class="col l4 m4 s12"></div>
+                    </div>
+                </li>
+                <div class="row"></div>
+            {% endif %}                            
+            {% if tournament_players_created %}
+                <div class="row"></div>
+                <li>
+                    <div class="center green-text text-darken-3 larger-font">
+                        {{ tournament_players_created|length }} Players Added to Tournaments
+                    </div>
+                    <div class="row">
+                        <div class="col l4 m3 s0"></div>
+                        <div class="col l4 m6 s12">
+                            <ol>
+                                {% for tp in tournament_players_created %}
+                                <li>
+                                    {{ tp.Tournament.City }} {{ tp.Tournament.Year }}: {{ tp.Player.Team.City }} {{ tp.Player.Team.TeamName }} - {{ tp.Player.PlayerFirstName }}, {{ tp.Player.PlayerLastName }} #{{ tp.PlayerNumber }}
+                                </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                        <div class="col l4 m3 s12"></div>
+                    </div>
+                </li>
+                <div class="row"></div>
+            {% endif %}                            
+            {% if tournament_players_updated %}
+                <div class="row"></div>
+                <li>
+                    <div class="row center green-text text-darken-3 larger-font">
+                        {{ tournament_players_updated|length }} Players Updated in Tournaments
+                    </div>
+                    <div class="row">
+                        <div class="col l4 m3 s0"></div>
+                        <div class="col l4 m6 s12">
+                            <ol>
+                                {% for tp in tournament_players_updated %}
+                                <li>
+                                    {{ tp.Tournament.City }} {{ tp.Tournament.Year }}: {{ tp.Player.Team.City }} {{ tp.Player.Team.TeamName }} - {{ tp.Player.PlayerFirstName }}, {{ tp.Player.PlayerLastName }} #{{ tp.PlayerNumber }}
+                                </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                        <div class="col l4 m3 s12"></div>
+                    </div>
+                </li>
+                <div class="row"></div>
+            {% endif %}                            
+        </ul>
+    </div>
+</div>
 
 {% endblock %}
