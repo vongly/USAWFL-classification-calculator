@@ -70,16 +70,13 @@
 
             });
         </script>
-
     </head>
-
-    
 
 	<ul id="header-dropdown" class="dropdown-content">
 		<strong>
-            {% if admin_url %}
-                {% if user.is_staff %}
-                    <li><a href="{{ admin_url }}/login/">Admin</a></li>
+            {% if user_staff_details.admin_url %}
+                {% if user_staff_details.user.is_staff %}
+                    <li><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
                     <li><a href="/upload/">Upload</a></li>
                 {% endif %}
                 <li><a href="/logout/">Logout</a></li>
@@ -90,9 +87,9 @@
 	</ul>
 	<ul id="mobile-links" class="sidenav" style="width: 45%;">
         <li style="padding-top: 15px;"></li>
-		{% if admin_url %}
-            {% if user.is_staff %}
-                <li><a href="{{ admin_url }}/login/">Admin</a></li>
+		{% if user_staff_details.admin_url %}
+            {% if user_staff_details.user.is_staff %}
+                <li><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
                 <li><a href="/upload/">Upload</a></li>
             {% endif %}
             <li><a href="/logout/">Logout</a></li>
@@ -106,7 +103,7 @@
 			<a href="#" data-target="mobile-links" class="sidenav-trigger right"><i class="material-icons" style="font-size: 35px; padding-top: 12px;">menu</i></a>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
 				<li>
-					{% if admin_url %}
+					{% if user_staff_details.admin_url %}
 						<a class="dropdown-trigger center" href="#!" data-target="header-dropdown" style="width: 170px; padding-top: 10px; padding-right: 10px;">Account</a>
 					{% else %}
 						<li><a class="center" href="/login/" style="padding-top:10px; width: 150px;">Login</a></li>

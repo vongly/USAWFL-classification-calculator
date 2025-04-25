@@ -1,115 +1,47 @@
 from django.shortcuts import render, HttpResponseRedirect
 
-import jwt
-
 from env import api_base_url, token_name, API_KEY
+from GlobalFunctions import get_user_staff_details
+
 import requests
+import jwt
 
 admin_url = None
 
 def TournamentList(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    user = None
-    admin_url = None
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            pass
-
-    url = f'{ api_base_url }/tournaments/'
-    call = requests.get(url=url)
-
-    tournaments = call.json()    
+    tournaments = requests.get(url=f'{ api_base_url }/tournaments/').json()
     tournaments = sorted(tournaments, key=lambda x: x['TournamentNumber'], reverse=True)
 
     years = sorted(set(item['Year'] for item in tournaments), reverse=True)
 
     return render(request, 'TournamentList.html', {
-            'user': user,
-            'admin_url': admin_url,
+            'user_staff_details': user_staff_details,
             'tournaments': tournaments,
             'years': years,
         }
     )
 
 def TournamentTeams(request, tournament_slug):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    user = None
-    admin_url = None
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            pass
-
-    url_tournament = f'{ api_base_url }/tournaments/{ tournament_slug }/'
-    call_tournament = requests.get(url=url_tournament)
-    tournament = call_tournament.json()
-
-    url_teams_in_tournament = f'{ api_base_url }/teams/?tournament={ tournament_slug }'
-    call_teams_in_tournament = requests.get(url=url_teams_in_tournament)
-    teams_in_tournament = call_teams_in_tournament.json()
+    tournament = requests.get(url=f'{ api_base_url }/tournaments/{ tournament_slug }/').json()
+    teams_in_tournament = requests.get(url=f'{ api_base_url }/teams/?tournament={ tournament_slug }').json()
 
     return render(request, 'TournamentTeams.html', {
-            'user': user,
-            'admin_url':admin_url,
+            'user_staff_details': user_staff_details,
             'teams_in_tournament':teams_in_tournament,
             'tournament':tournament,
         }
     )
 
 def TournamentTeamPlayers(request, tournament_slug, team_slug):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    user = None
-    admin_url = None
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            pass
-
-    url_tournament = f'{ api_base_url }/tournaments/{ tournament_slug }/'
-    call_tournament = requests.get(url=url_tournament)
-    tournament = call_tournament.json()
-
-    url_team = f'{ api_base_url }/teams/{ team_slug }/'
-    call_team = requests.get(url=url_team)
-    team = call_team.json()
-
-    url = f'{ api_base_url }/tournament_players/?tournament={ tournament_slug }&team={ team_slug }'
-    call = requests.get(url=url)
-    players = call.json()
+    tournament = requests.get(url=f'{ api_base_url }/tournaments/{ tournament_slug }/').json()
+    team = requests.get(url=f'{ api_base_url }/teams/{ team_slug }/').json()
+    players = requests.get(url=f'{ api_base_url }/tournament_players/?tournament={ tournament_slug }&team={ team_slug }').json()
 
     if request.method == 'POST':
         if 'clear' in request.POST:
@@ -118,8 +50,6 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
 
             submitted_tournamentplayer_ids_strings = request.POST.getlist('players_checked')
             submitted_tournamentplayer_ids = [ int(id) for id in submitted_tournamentplayer_ids_strings ]
-            
-
             submitted_players = [ player for player in players if player['id'] in submitted_tournamentplayer_ids ]
 
             classification_values = [ int(player['ClassificationValue']) for player in submitted_players ]
@@ -132,15 +62,15 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
                 'classification_total' : classification_total,
             }
 
+            # Handles the ability to maintain a checkmark after form is submitted
             for player in players:
                 if player['Player']['ID'] in submitted_tournamentplayer_ids:
-                    player['player_submitted'] = 1
+                    player['player_submitted'] = 1 # Maintains Checkmark
                 else:
-                    player['player_submitted'] = 0
+                    player['player_submitted'] = 0 # No Checkmark
 
             return render(request, 'TournamentTeamPlayers.html', {
-                    'user': user,
-                    'admin_url':admin_url,
+                    'user_staff_details': user_staff_details,
                     'players':players,
                     'tournament':tournament,
                     'team':team,
@@ -150,8 +80,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
             )
 
     return render(request, 'TournamentTeamPlayers.html', {
-            'user': user,
-            'admin_url':admin_url,
+            'user_staff_details': user_staff_details,
             'players':players,
             'tournament':tournament,
             'team':team

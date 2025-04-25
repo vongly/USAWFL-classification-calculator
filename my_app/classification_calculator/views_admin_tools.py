@@ -1,15 +1,15 @@
 from django.shortcuts import render, HttpResponseRedirect, redirect
 from django.http import HttpResponse
 
-import json
+from GlobalFunctions import get_user_staff_details, delete_session_item
+from env import api_base_url, token_name, API_KEY
+import UploadDetails
+
 import requests
+import pandas as pd
+import json
 import jwt
 import csv
-
-from env import api_base_url, token_name, API_KEY
-import requests
-
-import pandas as pd
 
 admin_url = None
 
@@ -48,31 +48,17 @@ def refresh_token(request):
 
         return response
 
+
+
 def login(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    user = None
-    admin_url = None
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            request.session['previous_url'] = request.path
-            return HttpResponseRedirect('/refresh/')
-
-        return HttpResponseRedirect('/')
+    if user_staff_details['user']:
+        HttpResponseRedirect('/')
+    else:
+        pass
 
     if request.method == 'POST':
-        url = f'{ api_base_url }/token/'
         form = request.POST
 
         data_validate_user = {
@@ -80,7 +66,10 @@ def login(request):
             'password': form.get('password'),
         }
 
-        call_validate_user = requests.post(url=url, data=data_validate_user)
+        call_validate_user = requests.post(
+            url=f'{ api_base_url }/token/',
+            data=data_validate_user,
+        )
 
         if call_validate_user.status_code == 200:
             tokens = call_validate_user.json()
@@ -120,10 +109,12 @@ def login(request):
             )
 
     return render(request, 'login.html',{
-            'user': user,
+            'user_staff_details': user_staff_details,
             'admin_url': admin_url,
         }
     )
+
+
 
 def logout(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
@@ -135,77 +126,30 @@ def logout(request):
     return HttpResponseRedirect('/')
 
 
+
 def upload_update(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    user = None
-    admin_url = None
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-            else:
-                return HttpResponseRedirect('/')
-        except:
-            request.session['previous_url'] = request.path
-            return HttpResponseRedirect('/refresh/')
-
-    elif not access_token:
-        return HttpResponseRedirect('/')
-
-    try:
-        del request.session['template_headers']
-    except:
+    if not user_staff_details['user']['is_staff']:
+        HttpResponseRedirect('/')
+    elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
+        HttpResponseRedirect('/refresh/')
+    else:
         pass
 
-    try:
-        del request.session['results_created_players']
-    except:
-        pass
+    delete_session_item(request, 'template_headers')
+    delete_session_item(request, 'results_created_players')
+    delete_session_item(request, 'results_created_update_tournament_players')
 
-    try:
-        del request.session['results_created_update_tournament_players']
-    except:
-        pass
+    user = user_staff_details['user']
+    headers = user_staff_details['headers']
 
-    expected_columns = [
-        'tournament_city',
-        'tournament_year',
-        'player_first_name',
-        'player_last_name',
-        'player_team_city',
-        'player_team_name',
-        'player_number',
-        'player_classification_value',
-    ]
-    dtype_map = {
-        'tournament_city': str,
-        'tournament_year': int,
-        'player_first_name': str,
-        'player_last_name': str,
-        'player_team_city': str,
-        'player_team_name': str,
-        'player_number': int,
-        'player_classification_value': int,
-    }
-
+    # For template, allows user to download w/o static file
+    expected_columns = UploadDetails.AddUpdateTournamentPlayers.expected_columns
     request.session['template_headers'] = expected_columns
 
-    url_tournaments = f'{ api_base_url }/tournaments/'
-    call_tournaments = requests.get(url=url_tournaments)
-    tournaments = call_tournaments.json()
-
-    url_teams = f'{ api_base_url }/teams/'
-    call_teams = requests.get(url=url_teams)
-    teams = call_teams.json()
+    tournaments = requests.get(url=f'{ api_base_url }/tournaments/').json()
+    teams = requests.get(url=f'{ api_base_url }/teams/').json()
 
     if request.method == 'POST':
         upload_file = request.FILES.get('upload_file')
@@ -227,91 +171,23 @@ def upload_update(request):
         for column in df.columns:
             df[column.strip().lower()] = df[column].map(lambda x: x.strip() if isinstance(x, str) else x)
 
-        uploaded_columns = df.columns.to_list()
-
         ### Data Validation Checks ###
+        upload_file_check = UploadDetails.AddUpdateTournamentPlayers(df, tournaments, teams)
 
-        # Tests
-        upload_error_message = None
+        file_checks = [
+            upload_file_check.check_expected_columns(),
+            upload_file_check.check_all_fields_correct_dtype(),
+            upload_file_check.check_for_blank_cells(),
+            upload_file_check.check_if_tournaments_exists(),
+            upload_file_check.check_if_tournaments_exists(),
+            upload_file_check.check_class_values_between_1_to_5(),
+            upload_file_check.check_player_num_between_0_99(),
+        ]
 
-        # Check for missing expected columns
-        try:
-            missing_expected_column = [column for column in expected_columns if column not in uploaded_columns]
-            if len(missing_expected_column) > 0:
-                upload_error_message = f'You are missing one or more of the expected column(s). Expected columns are: { ", ".join(expected_columns) }.'
-        except:
-            pass
-
-        # Check for blank cells in upload file
-        try:
-            blank_field = df.isna().any().any()
-            if blank_field:
-                upload_error_message = f'One or more cell(s) are empty. Make sure that there are no empty cells.'
-        except:
-            pass
-
-        try:
-            # Check that all uploaded tournaments exists (City Year)
-            df['tournament_city_year_combo'] = ( df['tournament_city'].apply(lambda x: x.lower()) + ' ' + df['tournament_year'].apply(lambda x: str(int(x))) )
-            tournament_city_year_uploaded = df['tournament_city_year_combo'].unique().tolist()
-            tournament_city_year_existing = [ f'{ t["City"].lower() } { t["Year"] }' for t in tournaments ]
-            tournaments_that_dont_exist = [ t for t in tournament_city_year_uploaded if t not in tournament_city_year_existing ]
-            if len(tournaments_that_dont_exist) > 0:
-                upload_error_message = f'The following tournaments do not exist: { ", ".join(tournaments_that_dont_exist).title() }. Make sure that all uploaded tournament cities and corresponding years exist. '
-
-            tournament_slug_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['slug'] for t in tournaments }
-            tournament_slugs = df['tournament_city_year_combo'].map(tournament_slug_lookup).to_list()
-
-            tournament_id_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['ID'] for t in tournaments }
-            df['Tournament_id'] = df['tournament_city_year_combo'].map(tournament_id_lookup)
-        except:
-            pass
-
-        try:
-            # Check that all uploaded teams exists (City TeamName)
-            df['team_city_name_combo'] = ( df['player_team_city'].apply(lambda x: x.lower()) + ' ' + df['player_team_name'].apply(lambda x: x.lower()) )
-            team_city_name_uploaded = df['team_city_name_combo'].unique().tolist()
-            team_city_name_existing = [ f'{ team["City"].lower() } { team["TeamName"].lower() }' for team in teams ]
-            teams_that_dont_exist = [ t for t in team_city_name_uploaded if t not in team_city_name_existing ]
-            if len(teams_that_dont_exist) > 0:
-                upload_error_message = f'The following tournaments do not exist: { ", ".join(teams_that_dont_exist).title() }. Make sure that all uploaded team cities and corresponding teams exist. '
-
-            team_slug_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['slug'] for t in teams }
-            team_slugs = df['team_city_name_combo'].map(team_slug_lookup).to_list()
-
-            team_id_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['ID'] for t in teams }
-            df['Team_id'] = df['team_city_name_combo'].map(team_id_lookup)
-            print(df)
-            print(team_slugs)
-        except:
-            pass
-
-        try:
-            # Check that all classification values are between 1-5
-            classification_values_uploaded = df['player_classification_value'].apply(lambda x: int(x)).unique().tolist()
-            classification_values_improper = [ value for value in classification_values_uploaded if value <= 0 or value > 5  ]
-            if len(classification_values_improper) > 0:
-                upload_error_message = 'All classification_values must be between 1-5, please enter proper classification values.'
-        except:
-            pass
-
-        try:
-            # Check that all player numbers are between 0-99
-            player_numbers_uploaded = df['player_number'].apply(lambda x: int(x)).unique().tolist()
-            player_numbers_improper = [ value for value in player_numbers_uploaded if value < 0 or value >= 100  ]
-            if len(player_numbers_improper) > 0:
-                upload_error_message = 'All player_number must be between 0-100, please enter proper player numbers.'
-        except:
-            pass
-
-        try:
-            # Check that all fields have the correct dtype
-            df = df.astype(dtype_map)
-        except:
-            upload_error_message = 'One or more fields are not in the correct format. Please make sure that all integer fields contain only integers.'
-
-        if upload_error_message:
-            print(upload_error_message)
+        if any(check is not None for check in file_checks):
+            for response in file_checks:
+                upload_error_message = response
+                break
 
             return render(request, 'upload_update.html', {
                     'user': user,
@@ -322,16 +198,16 @@ def upload_update(request):
                 }
             )
 
-        df = df.astype(dtype_map)
+        upload_file_check.add_tournament_id_to_df()
+        upload_file_check.add_team_id_to_df()
+        upload_file_check.convert_dtype()
+
+        tournament_slugs = upload_file_check.create_tournament_slugs_list()
+        team_slugs = upload_file_check.create_team_slugs_list()
 
         tournament_teams_filter_string = f'?tournament={ "&tournament=".join(tournament_slugs) }&team={ "&team=".join(team_slugs) }'
-        url_tournament_players = f'{ api_base_url }/tournament_players/{ tournament_teams_filter_string }'
-        call_tournament_players = requests.get(url=url_tournament_players)
-        tournament_players = call_tournament_players.json()
-
-        url_players = f'{ api_base_url }/players/'
-        call_players = requests.get(url=url_players)
-        players = call_players.json()
+        tournament_players = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_teams_filter_string }').json()
+        players = requests.get(url=f'{ api_base_url }/players/').json()
 
         ### Upload New Players ###
 
@@ -355,7 +231,7 @@ def upload_update(request):
 
         # Upload df_players_to_upload into Players model
         call_create_players = requests.post(
-            url = url_players,
+            url = f'{ api_base_url }/players/',
             json = data_create_players,
             headers = headers,
         )
@@ -363,8 +239,7 @@ def upload_update(request):
         create_players = json.loads(call_create_players.content.decode('utf-8'))
 
         # Refreshes players variable to include newly upload player_ids
-        call_players = requests.get(url=url_players)
-        players = call_players.json()
+        players = requests.get(url=f'{ api_base_url }/players/').json()
 
         # Adds player_ids to upload records
         player_id_lookup = { f'{ player["PlayerFirstName"].lower() } { player["PlayerLastName"].lower() } { player["Team"]["ID"] }': player['ID'] for player in players }
@@ -385,6 +260,7 @@ def upload_update(request):
         })
 
         # Needs to determine if current player is already in tournament -> adds tournament_player_id if so
+        tournament_city_year_existing = upload_file_check.tournament_city_year_existing
         lookup_existing_tournament_player_id = { (t_p['Player']['ID'], t_p['Tournament']['ID']): t_p['id'] for t_p in tournament_players if f'{ t_p["Tournament"]["City"].lower() } { t_p["Tournament"]["Year"] }' in tournament_city_year_existing}
 
         df_tournament_player['id'] = df_tournament_player.apply(
@@ -396,14 +272,13 @@ def upload_update(request):
 
         for record in data_create_update_tournament_players:
             keys_to_remove = [key for key, value in record.items() if key == 'id' and value == 0]
-            
+
             for key in keys_to_remove:
                 del record[key]
 
         # Uploads new players in tournament, updates existing players in tournament
-        url_create_update_tournament_players = f'{ api_base_url }/create_update/tournament_players/'
         call_create_update_tournament_players = requests.post(
-            url = url_create_update_tournament_players,
+            url = f'{ api_base_url }/create_update/tournament_players/',
             json = data_create_update_tournament_players,
             headers = headers,
         )
@@ -414,50 +289,19 @@ def upload_update(request):
         request.session['results_created_players'] = create_players
         request.session['results_created_update_tournament_players'] = create_update_tournament_players
 
-        return redirect('/upload/success/')
+        return HttpResponseRedirect('/upload/success/')
 
     return render(request, 'upload_update.html', {
-            'user': user,
-            'admin_url': admin_url,
+            'user_staff_details': user_staff_details,
             'tournaments': tournaments,
             'teams': teams,
         }
     )
 
+
+
 def upload_update_success(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
-
-    user = None
-    admin_url = None
-
-    if access_token:
-        try:
-            jwt.decode(access_token, API_KEY, algorithms='HS256')
-        except:
-            request.session['previous_url'] = request.path
-            return HttpResponseRedirect('/refresh/')
-
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-
-    if access_token:
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            return HttpResponseRedirect('/')
-
-    elif not access_token:
-        return HttpResponseRedirect('/')
+    user_staff_details = get_user_staff_details(request)
 
     results_created_players = request.session.get('results_created_players', None)
     results_created_update_tournament_players = request.session.get('results_created_update_tournament_players', None)
@@ -466,68 +310,46 @@ def upload_update_success(request):
         player_ids = [ str(player['ID']) for player in results_created_players ]
         player_ids_string = f'?pid={ "&pid=".join(player_ids) }'
 
-        url  = f'{ api_base_url }/players/{ player_ids_string }'
-        call = requests.get(url=url)
-        players_created = call.json()
+        players_created = requests.get(url=f'{ api_base_url }/players/{ player_ids_string }').json()
     else:
         players_created = []
+
     if results_created_update_tournament_players:
         if results_created_update_tournament_players['created'] != []:
             tournament_player_ids = [ str(tp['id']) for tp in results_created_update_tournament_players['created'] ]
             tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
 
-            url  = f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }'
-            call = requests.get(url=url)
-            tournament_players_created = call.json()
+            tournament_players_created = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }').json()
         else:
             tournament_players_created = []
+
         if results_created_update_tournament_players['updated'] != []:
             tournament_player_ids = [ str(tp['id']) for tp in results_created_update_tournament_players['updated'] ]
             tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
 
-            url  = f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }'
-            call = requests.get(url=url)
-            tournament_players_updated = call.json()
+            tournament_players_updated = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }').json()
         else:
             tournament_players_updated = []
 
     return render(request, 'upload_update_success.html', {
-            'user': user,
-            'admin_url': admin_url,
+            'user_staff_details': user_staff_details,
             'players_created': players_created,
             'tournament_players_created': tournament_players_created,
             'tournament_players_updated': tournament_players_updated,
         }
     )
 
+
+
 def download_upload_template(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
+    user_staff_details = get_user_staff_details(request)
 
-    if access_token:
-        try:
-            jwt.decode(access_token, API_KEY, algorithms='HS256')
-        except:
-            request.session['previous_url'] = request.path
-            return HttpResponseRedirect('/refresh/')
-
-        headers = {
-            'Authorization': f'Bearer { access_token }'
-        }
-
-    if access_token:
-        try:
-            payload = jwt.decode(access_token, API_KEY, algorithms='HS256')
-            user_id = payload.get('user_id')
-
-            user = requests.get(url=f'{ api_base_url }/user/{ user_id }', headers=headers).json()
-            
-            if user['is_staff']:
-                admin_url = f'{ api_base_url }/admin'
-        except:
-            return HttpResponseRedirect('/')
-
-    elif not access_token:
-        return HttpResponseRedirect('/')
+    if not user_staff_details['user']['is_staff']:
+        HttpResponseRedirect('/')
+    elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
+        HttpResponseRedirect('/refresh/')
+    else:
+        pass
 
     try:
         template_headers = request.session.get('template_headers', None)
