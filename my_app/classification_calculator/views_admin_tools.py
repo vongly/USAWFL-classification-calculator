@@ -8,10 +8,8 @@ import UploadDetails
 import requests
 import pandas as pd
 import json
-import jwt
 import csv
 
-admin_url = None
 
 def refresh_token(request):
     access_token = request.COOKIES.get(f'{ token_name }_access')
@@ -92,8 +90,7 @@ def login(request):
         elif call_validate_user.status_code == 401:
             response = 'Incorrect username or password'
             return render(request, 'login.html', {
-                    'user': user,
-                    'admin_url': admin_url,
+                    'user_staff_details': user_staff_details,
                     'request': request,
                     'response': response,
                 }
@@ -101,8 +98,7 @@ def login(request):
         else:
             response = call_validate_user.status_code
             return render(request, 'login.html', {
-                    'user': user,
-                    'admin_url': admin_url,
+                    'user_staff_details': user_staff_details,
                     'request': request,
                     'response': response,
                 }
@@ -110,15 +106,15 @@ def login(request):
 
     return render(request, 'login.html',{
             'user_staff_details': user_staff_details,
-            'admin_url': admin_url,
         }
     )
 
 
 
 def logout(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
-    if access_token:
+    user_staff_details = get_user_staff_details(request)
+
+    if user_staff_details['user']:
         response = HttpResponseRedirect('/')
         response.delete_cookie(f'{ token_name }_access')
         response.delete_cookie(f'{ token_name }_refresh')
@@ -156,8 +152,7 @@ def upload_update(request):
 
         if not upload_file:
             return render(request, 'upload_update.html', {
-                    'user': user,
-                    'admin_url': admin_url,
+                    'user_staff_details': user_staff_details,
                     'tournaments': tournaments,
                     'teams': teams,
                     'upload_error_message' : 'No File Uploaded',
@@ -212,19 +207,19 @@ def upload_update(request):
         ### Upload New Players ###
 
         # Check which players don't existws
-        df['player_first_last_name_team_id_combo'] = ( df['player_first_name'].apply(lambda x: x.lower()) + ' ' + df['player_last_name'].apply(lambda x: x.lower()) + ' ' + df['Team_id'].apply(lambda x: str(int(x))) )
+        df['player_first_last_name_team_id_combo'] = ( df['player_first_name'].apply(lambda x: x.lower()) + ' ' + df['player_last_name'].apply(lambda x: x.lower()) + ' ' + df['team_id'].apply(lambda x: str(int(x))) )
         player_last_name_team_id_uploaded = df['player_first_last_name_team_id_combo'].tolist()
-        player_last_name_team_id_existing = [ f'{ player["PlayerFirstName"].lower() } { player["PlayerLastName"].lower() } { player["Team"]["ID"] }' for player in players ]
+        player_last_name_team_id_existing = [ f'{ player["first_name"].lower() } { player["last_name"].lower() } { player["team"]["id"] }' for player in players ]
         players_that_dont_exist = [ t for t in player_last_name_team_id_uploaded if t not in player_last_name_team_id_existing ]
 
         df_players_to_upload = df[df['player_first_last_name_team_id_combo'].isin(players_that_dont_exist)][[
             'player_first_name',
             'player_last_name',
-            'Team_id',
+            'team_id',
         ]].rename(columns={
-            'player_first_name': 'PlayerFirstName',
-            'player_last_name': 'PlayerLastName',
-            'Team_id': 'Team',
+            'player_first_name': 'first_name',
+            'player_last_name': 'last_name',
+            'team_id': 'team',
         })
 
         data_create_players = df_players_to_upload.to_dict(orient='Records')
@@ -242,29 +237,29 @@ def upload_update(request):
         players = requests.get(url=f'{ api_base_url }/players/').json()
 
         # Adds player_ids to upload records
-        player_id_lookup = { f'{ player["PlayerFirstName"].lower() } { player["PlayerLastName"].lower() } { player["Team"]["ID"] }': player['ID'] for player in players }
-        df['Player_id'] = df['player_first_last_name_team_id_combo'].map(player_id_lookup).fillna(0).astype('int32')
+        player_id_lookup = { f'{ player["first_name"].lower() } { player["last_name"].lower() } { player["team"]["id"] }': player['id'] for player in players }
+        df['player_id'] = df['player_first_last_name_team_id_combo'].map(player_id_lookup).fillna(0).astype('int32')
 
         ### Upload New Players ###
 
         df_tournament_player = df[[
-            'Tournament_id',
-            'Player_id',
+            'tournament_id',
+            'player_id',
             'player_number',
             'player_classification_value',
         ]].rename(columns={
-            'Tournament_id': 'Tournament',
-            'Player_id': 'Player',
-            'player_number': 'PlayerNumber',
-            'player_classification_value': 'ClassificationValue',
+            'tournament_id': 'tournament',
+            'player_id': 'player',
+            'player_number': 'player_number',
+            'player_classification_value': 'classification_value',
         })
 
         # Needs to determine if current player is already in tournament -> adds tournament_player_id if so
         tournament_city_year_existing = upload_file_check.tournament_city_year_existing
-        lookup_existing_tournament_player_id = { (t_p['Player']['ID'], t_p['Tournament']['ID']): t_p['id'] for t_p in tournament_players if f'{ t_p["Tournament"]["City"].lower() } { t_p["Tournament"]["Year"] }' in tournament_city_year_existing}
+        lookup_existing_tournament_player_id = { (t_p['player']['id'], t_p['tournament']['id']): t_p['id'] for t_p in tournament_players if f'{ t_p["tournament"]["city"].lower() } { t_p["tournament"]["year"] }' in tournament_city_year_existing}
 
         df_tournament_player['id'] = df_tournament_player.apply(
-            lambda row: lookup_existing_tournament_player_id.get((row['Player'], row['Tournament'])),
+            lambda row: lookup_existing_tournament_player_id.get((row['player'], row['tournament'])),
             axis=1
         ).fillna(0).astype('int32')
 
@@ -307,7 +302,7 @@ def upload_update_success(request):
     results_created_update_tournament_players = request.session.get('results_created_update_tournament_players', None)
 
     if results_created_players:
-        player_ids = [ str(player['ID']) for player in results_created_players ]
+        player_ids = [ str(player['id']) for player in results_created_players ]
         player_ids_string = f'?pid={ "&pid=".join(player_ids) }'
 
         players_created = requests.get(url=f'{ api_base_url }/players/{ player_ids_string }').json()

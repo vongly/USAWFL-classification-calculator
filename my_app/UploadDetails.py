@@ -10,7 +10,7 @@ class AddUpdateTournamentPlayers:
         'player_number',
         'player_classification_value',
     ]
-    
+
     dtype_map = {
         'tournament_city': str,
         'tournament_year': int,
@@ -41,11 +41,11 @@ class AddUpdateTournamentPlayers:
 
         self.df['tournament_city_year_combo'] = ( self.df['tournament_city'].apply(lambda x: x.lower()) + ' ' + self.df['tournament_year'].apply(lambda x: str(int(x))) )
         self.tournament_city_year_uploaded = df['tournament_city_year_combo'].unique().tolist()
-        self.tournament_city_year_existing = [ f'{ t["City"].lower() } { t["Year"] }' for t in tournaments ]
+        self.tournament_city_year_existing = [ f'{ t["city"].lower() } { t["year"] }' for t in tournaments ]
 
         self.df['team_city_name_combo'] = ( self.df['player_team_city'].apply(lambda x: x.lower()) + ' ' + self.df['player_team_name'].apply(lambda x: x.lower()) )
         self.team_city_name_uploaded = df['team_city_name_combo'].unique().tolist()
-        self.team_city_name_existing = [ f'{ team["City"].lower() } { team["TeamName"].lower() }' for team in teams ]
+        self.team_city_name_existing = [ f'{ team["city"].lower() } { team["name"].lower() }' for team in teams ]
 
 
     def check_expected_columns(self):
@@ -95,11 +95,11 @@ class AddUpdateTournamentPlayers:
         return upload_error_message
 
     def add_tournament_id_to_df(self):
-        tournament_id_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['ID'] for t in self.tournaments }
-        self.df['Tournament_id'] = self.df['tournament_city_year_combo'].map(tournament_id_lookup)
+        tournament_id_lookup = { f'{ t["city"].lower() } { t["year"] }': t['id'] for t in self.tournaments }
+        self.df['tournament_id'] = self.df['tournament_city_year_combo'].map(tournament_id_lookup)
 
     def create_tournament_slugs_list(self):
-        tournament_slug_lookup = { f'{ t["City"].lower() } { t["Year"] }': t['slug'] for t in self.tournaments }
+        tournament_slug_lookup = { f'{ t["city"].lower() } { t["year"] }': t['slug'] for t in self.tournaments }
         tournament_slugs = self.df['tournament_city_year_combo'].map(tournament_slug_lookup).to_list()
         return tournament_slugs
 
@@ -115,11 +115,11 @@ class AddUpdateTournamentPlayers:
         return upload_error_message
 
     def add_team_id_to_df(self):
-        team_id_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['ID'] for t in self.teams }
-        self.df['Team_id'] = self.df['team_city_name_combo'].map(team_id_lookup)
+        team_id_lookup = { f'{ t["city"].lower() } { t["name"].lower() }': t['id'] for t in self.teams }
+        self.df['team_id'] = self.df['team_city_name_combo'].map(team_id_lookup)
 
     def create_team_slugs_list(self):
-        team_slug_lookup = { f'{ t["City"].lower() } { t["TeamName"].lower() }': t['slug'] for t in self.teams }
+        team_slug_lookup = { f'{ t["city"].lower() } { t["name"].lower() }': t['slug'] for t in self.teams }
         team_slugs = self.df['team_city_name_combo'].map(team_slug_lookup).to_list()
         return team_slugs
 

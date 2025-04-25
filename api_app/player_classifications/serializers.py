@@ -30,7 +30,7 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PlayerSerializer(serializers.ModelSerializer):
-    Team = TeamSerializer(read_only=True)
+    team = TeamSerializer(read_only=True)
 
     class Meta:
         model = models.Player
@@ -43,8 +43,8 @@ class PlayerCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TournamentPlayerSerializer(serializers.ModelSerializer):
-    Tournament = TournamentSerializer()
-    Player = PlayerSerializer(read_only=True)
+    tournament = TournamentSerializer()
+    player = PlayerSerializer(read_only=True)
 
     class Meta:
         model = models.TournamentPlayer

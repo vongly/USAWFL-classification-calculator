@@ -3,9 +3,9 @@
 {% block content %}
 
 	<h3 class="center">
-		<a href="../">{{ tournament.City }} {{ tournament.Year }}</a>
+		<a href="../">{{ tournament.city }} {{ tournament.year }}</a>
 		<br>
-		{{ team.City }} {{ team.TeamName }}
+		{{ team.city }} {{ team.name }}
 	</h3>
 	<div class="row"></div>
     <div class="row center">
@@ -64,9 +64,9 @@
 					<tbody>
 						{% for player in players %}
 							<tr>
-								<td><span class="mid-font heavy-font">#{{ player.PlayerNumber }}</span></td>
-								<td>{{ player.Player.PlayerLastName }}, {{ player.Player.PlayerFirstName }}</td>
-								<td>{{ player.ClassificationValue }}</td>
+								<td><span class="mid-font heavy-font">#{{ player.player_number }}</span></td>
+								<td>{{ player.player.last_name }}, {{ player.player.first_name }}</td>
+								<td>{{ player.classification_value }}</td>
 								<td>
 									<label>
 										{% if player.id in submitted_tournamentplayer_ids %}

@@ -12,9 +12,9 @@ def TournamentList(request):
     user_staff_details = get_user_staff_details(request)
 
     tournaments = requests.get(url=f'{ api_base_url }/tournaments/').json()
-    tournaments = sorted(tournaments, key=lambda x: x['TournamentNumber'], reverse=True)
+    tournaments = sorted(tournaments, key=lambda x: x['number'], reverse=True)
 
-    years = sorted(set(item['Year'] for item in tournaments), reverse=True)
+    years = sorted(set(item['year'] for item in tournaments), reverse=True)
 
     return render(request, 'TournamentList.html', {
             'user_staff_details': user_staff_details,
@@ -52,7 +52,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
             submitted_tournamentplayer_ids = [ int(id) for id in submitted_tournamentplayer_ids_strings ]
             submitted_players = [ player for player in players if player['id'] in submitted_tournamentplayer_ids ]
 
-            classification_values = [ int(player['ClassificationValue']) for player in submitted_players ]
+            classification_values = [ int(player['classification_value']) for player in submitted_players ]
 
             player_count = len(classification_values)
             classification_total = sum(classification_values)
@@ -64,7 +64,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
 
             # Handles the ability to maintain a checkmark after form is submitted
             for player in players:
-                if player['Player']['ID'] in submitted_tournamentplayer_ids:
+                if player['player']['id'] in submitted_tournamentplayer_ids:
                     player['player_submitted'] = 1 # Maintains Checkmark
                 else:
                     player['player_submitted'] = 0 # No Checkmark

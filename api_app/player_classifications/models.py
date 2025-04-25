@@ -1,80 +1,81 @@
 from django.db import models
 
 class Tournament(models.Model):
-	ID = models.AutoField(primary_key=True)
-	TournamentNumber = models.IntegerField()
-	Year = models.IntegerField()
-	City = models.CharField(max_length=50)
-	State = models.CharField(max_length=2)
-	Date = models.DateField()
+	id = models.AutoField(primary_key=True)
+	number = models.IntegerField()
+	year = models.IntegerField()
+	city = models.CharField(max_length=50)
+	state = models.CharField(max_length=2)
+	date = models.DateField()
 	slug = models.SlugField()
 
 	def __str__(self):
 		return '{} - {} - {}'.format(
-			self.TournamentNumber.__str__(),
-			self.Year.__str__(),
-			self.City.__str__()
+			self.number.__str__(),
+			self.year.__str__(),
+			self.city.__str__()
 		)
 
 	class Meta:
-		ordering = ['-Year','TournamentNumber']
+		ordering = ['-year','-number']
 
 class Team(models.Model):
-	ID = models.AutoField(primary_key=True)
-	TeamName = models.CharField(max_length=50)
-	City = models.CharField(max_length=50)
-	State = models.CharField(max_length=2)
+	id = models.AutoField(primary_key=True)
+	name = models.CharField(max_length=50)
+	city = models.CharField(max_length=50)
+	state = models.CharField(max_length=2)
 	slug = models.SlugField()
 
 	def __str__(self):
-		return '{} {}'.format(self.City.__str__(), self.TeamName.__str__())
+		return '{} {}'.format(self.city.__str__(), self.name.__str__())
 
 	class Meta:
-		ordering = ['City', 'TeamName',]
+		ordering = ['city', 'name',]
 
 
 class Player(models.Model):
-	ID = models.AutoField(primary_key=True)
-	PlayerFirstName = models.CharField(max_length=50)
-	PlayerLastName = models.CharField(max_length=50)
-	Team = models.ForeignKey(Team, on_delete=models.CASCADE)
+	id = models.AutoField(primary_key=True)
+	first_name = models.CharField(max_length=50)
+	last_name = models.CharField(max_length=50)
+	team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
 	def __str__(self):
 		return '{}, {} - {} {}'.format(
-			self.PlayerLastName.__str__(),
-			self.PlayerFirstName.__str__(),
-			self.Team.City.__str__(),
-			self.Team.TeamName.__str__(),
+			self.last_name.__str__(),
+			self.first_name.__str__(),
+			self.team.city.__str__(),
+			self.team.name.__str__(),
 		)
 
 	class Meta:
 		ordering = [
-			'Team__City',
-			'Team__TeamName',
-			'PlayerLastName',
-			'PlayerFirstName',
+			'team__city',
+			'team__name',
+			'last_name',
+			'first_name',
 		]
 
 class TournamentPlayer(models.Model):
-	Tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-	Player = models.ForeignKey(Player, on_delete=models.CASCADE)
-	PlayerNumber = models.IntegerField()
-	ClassificationValue = models.IntegerField()
+	id = models.AutoField(primary_key=True)
+	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+	player = models.ForeignKey(Player, on_delete=models.CASCADE)
+	player_number = models.IntegerField()
+	classification_value = models.IntegerField()
 
 	def __str__(self):
 		return '{}: {} #{} ({})'.format(
-			self.Tournament.__str__(),
-			self.Player.__str__(),
-			self.PlayerNumber.__str__(),
-			self.ClassificationValue.__str__(),
+			self.tournament.__str__(),
+			self.player.__str__(),
+			self.player_number.__str__(),
+			self.classification_value.__str__(),
 		)
 
 	class Meta:
 		ordering = [
-			'-Tournament__Year',
-			'Tournament__TournamentNumber',
-			'Player__Team__City',
-			'Player__Team__TeamName',
-			'Player__PlayerLastName',
-			'Player__PlayerFirstName',
+			'-tournament__year',
+			'tournament__number',
+			'player__team__city',
+			'player__team__name',
+			'player__last_name',
+			'player__first_name',
 		]

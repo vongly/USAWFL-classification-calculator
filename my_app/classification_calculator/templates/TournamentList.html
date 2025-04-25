@@ -20,10 +20,10 @@
 							</td>
 						</tr>
 						{% for tournament in tournaments %}	 
-							{% if year == tournament.Year %}
+							{% if year == tournament.year %}
 								<tr>
 									<td>
-										<a href="t/{{ tournament.slug }}">{{ tournament.City }} {{ tournament.Year }}</a>
+										<a href="t/{{ tournament.slug }}">{{ tournament.city }} {{ tournament.year }}</a>
 									</td>
 								</tr>
 							{% endif %}

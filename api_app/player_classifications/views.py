@@ -68,11 +68,11 @@ class TeamList(ListCreateAPIView):
         tournament_slug = self.request.query_params.get('tournament', None)
 
         if tournament_slug:
-            all_players_in_tournament = models.TournamentPlayer.objects.all().filter(Tournament__slug=tournament_slug)
-            teams_in_tournament = list(all_players_in_tournament.values('Player__Team').distinct())
-            teams_in_tournament_list = [ item['Player__Team'] for item in teams_in_tournament]
+            all_players_in_tournament = models.TournamentPlayer.objects.all().filter(tournament__slug=tournament_slug)
+            teams_in_tournament = list(all_players_in_tournament.values('player__team').distinct())
+            teams_in_tournament_list = [ item['player__team'] for item in teams_in_tournament]
 
-            queryset = models.Team.objects.all().filter(ID__in=teams_in_tournament_list).order_by('TeamName')
+            queryset = models.Team.objects.all().filter(id__in=teams_in_tournament_list).order_by('name')
         else:
             queryset = models.Team.objects.all()
         
@@ -111,20 +111,22 @@ class PlayerList(ListCreateAPIView):
         if team_slugs and player_ids:
             try:
                 player_ids = [ int(player_id) for player_id in player_ids ]
-                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs, ID__in=player_ids).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs, id__in=player_ids)
             except:
-                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs)
         elif team_slugs:
-            queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+            queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs)
         elif player_ids:
             try:
                 player_ids = [ int(player_id) for player_id in player_ids ]
-                queryset = models.Player.objects.all().filter(ID__in=player_ids).order_by('Team__TeamName', 'PlayerLastName', 'PlayerFirstName')
+                queryset = models.Player.objects.all().filter(id__in=player_ids)
             except:
                 pass
         else:
             queryset = models.Player.objects.all()
         
+        queryset = queryset.order_by('team__name', 'last_name', 'first_name')
+
         return queryset
 
 
@@ -172,19 +174,21 @@ class TournamentPlayerList(ListAPIView):
 
         if tournament_player_ids:
             tournament_player_ids = [ int(tournament_player_id) for tournament_player_id in tournament_player_ids ]
-            queryset = models.TournamentPlayer.objects.all().filter(id__in=tournament_player_ids).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.all().filter(id__in=tournament_player_ids)
         elif player_ids:
             player_ids = [ int(player_id) for player_id in player_ids ]
-            queryset = models.TournamentPlayer.objects.all().filter(Player__ID__in=player_ids).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.all().filter(player__id__in=player_ids)
         elif tournament_slugs and team_slugs:
-            queryset = models.TournamentPlayer.objects.all().filter(Tournament__slug__in=tournament_slugs, Player__Team__slug__in=team_slugs).order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.all().filter(tournament__slug__in=tournament_slugs, player__team__slug__in=team_slugs)
         elif tournament_slugs:
-            queryset = models.TournamentPlayer.objects.filter(Tournament__slug__in=tournament_slugs).order_by('Player__Team__TeamName','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.filter(tournament__slug__in=tournament_slugs)
         elif team_slugs:
-            queryset = models.TournamentPlayer.objects.all().filter(Player__Team__slug__in=team_slugs).order_by('-Tournament__Year','-Tournament__TournamentNumber','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.all().filter(player__team__slug__in=team_slugs)
         else:
-            queryset = models.TournamentPlayer.objects.all().order_by('-Tournament__Year','-Tournament__TournamentNumber','Player__Team__TeamName','PlayerNumber')
+            queryset = models.TournamentPlayer.objects.all()
         
+        queryset = queryset.order_by('-tournament__year','-tournament__number','player__team__name','player_number')
+
         return queryset
 
     def get_permissions(self):

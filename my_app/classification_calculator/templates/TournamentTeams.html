@@ -2,7 +2,7 @@
 
 {% block content %}
 
-	<h3 class="center">{{ tournament.City }} {{ tournament.Year }}</h3>
+	<h3 class="center">{{ tournament.city }} {{ tournament.year }}</h3>
 	<div class="row">
 		<div class="col l5 m4 s3"></div>
 		<div class="col l2 m4 s6">
@@ -16,7 +16,7 @@
 					{% for team in teams_in_tournament %}	 
 						<tr>
 							<td>
-								<a href="./{{ team.slug }}">{{ team.City }} {{ team.TeamName }}</a>
+								<a href="./{{ team.slug }}">{{ team.city }} {{ team.name }}</a>
 							</td>
 						</tr>
 					{% endfor %}
