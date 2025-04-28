@@ -68,8 +68,6 @@
                         <div class="row">
                             <button class="waves-effect waves-light btn-large red darken-4" type="submit" value="submit">Upload</button>
                         </div>
-                        <div class="row">
-                        </div>
                     </div>
                 </form>
             </div>
@@ -79,6 +77,7 @@
             <div class="row">
                 <button data-target="upload_requirements" class="waves-effect waves-light btn-small modal-trigger blue darken-3" >See Requirements</button>
             </div>
+            <div class="row"></div>
             <div class="row">
                 <a href="/upload/template/">tournament_player_upload_template.csv</a>
             </div>
@@ -89,40 +88,68 @@
 
 
     <!-- Modal Structure -->
-    <div id="upload_requirements" class="modal">
+    <div id="upload_requirements" class="modal" style="max-width: 700px;">
       <div class="modal-content">
+        <div class="row"></div>
         <div class="center">
             <h4>Upload Requirements</h4>
         </div>
+        <div class="row"></div>
         <div class="row">
-            <div class="col" style="width:2%;"></div>
-            <div>
-                <ul class="col bulleted browser-default">
-                    <li>
-                        Required columns:
+            <div class="col l1 m1"></div>
+            <div class="col l9 m9">
+                <ul class="bulleted browser-default">
+                    <li class="extra-margin-bottom">
+                        Required columns (see download link below):
                         <i>
-                            tournament_city, tournament_year, player_first_name, player_last_name, player_team_city, player_team_name, player_number, player_classification_value
+                            <b>
+                                <ul style="padding-left: 3%;">
+                                    <li>
+                                        - tournament_city
+                                    </li>
+                                    <li>
+                                        - tournament_year
+                                    </li>
+                                    <li>
+                                        - player_first_name
+                                    </li>
+                                    <li>
+                                        - player_last_name
+                                    </li>
+                                    <li>
+                                        - player_team_city
+                                    </li>
+                                    <li>
+                                        - player_team_name
+                                    </li>
+                                    <li>
+                                        - player_number
+                                    </li>
+                                    <li>
+                                        - player_classification_value
+                                    </li>
+                                </ul>
+                            </b>
                         </i>
-                        (see download link below)
                     </li>
-                    <li>
+                    <li class="extra-margin-bottom">
                         No field or cell can be empty or blank
                     </li>
-                    <li>
-                        All values in <i>tournmanet_city</i> and <i>tournament_year</i> must respectively match with an existing tournamnet (see above on main page)
+                    <li class="extra-margin-bottom">
+                        All <i><b>tournament_city</b></i> and <i><b>tournament_year</b></i> must respectively match with an existing tournament<br>(see above on main page)
                     </li>
-                    <li>
-                        All values in <i>player_team_city</i> and <i>player_team_name</i> must respectively match with an existing team (see above on main page)
+                    <li class="extra-margin-bottom">
+                        All <i><b>player_team_city</b></i> and <i><b>player_team_name</b></i> must respectively match with an existing team<br>(see above on main page)
                     </li>
-                    <li>
-                        All values in <i>player_classification_value</i> must be between 1-5
+                    <li class="extra-margin-bottom">
+                        All <i><b>player_classification_value</b></i> must be between <b>1-5</b>
                     </li>
-                    <li>
-                        All values in <i>player_number</i> must be between 0-99
+                    <li class="extra-margin-bottom">
+                        All <i><b>player_number</b></i> must be between <b>0-99</b>
                     </li>
                 </ul>
             </div>
-            <div class="col" style="width:2%;"></div>
+            <div class="col l2 m2 s0"></div>
           </div>
         </div>
         <div class="modal-footer">
