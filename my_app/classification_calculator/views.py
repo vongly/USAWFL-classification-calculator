@@ -6,9 +6,16 @@ from GlobalFunctions import get_user_staff_details
 import requests
 import jwt
 
-admin_url = None
 
-def TournamentList(request):
+def home(request):
+    user_staff_details = get_user_staff_details(request)
+
+    return render(request, 'home.html', {
+            'user_staff_details': user_staff_details,
+        }
+    )
+
+def tournament_list(request):
     user_staff_details = get_user_staff_details(request)
 
     tournaments = requests.get(url=f'{ api_base_url }/tournaments/').json()
@@ -16,27 +23,27 @@ def TournamentList(request):
 
     years = sorted(set(item['year'] for item in tournaments), reverse=True)
 
-    return render(request, 'TournamentList.html', {
+    return render(request, 'tournament_list.html', {
             'user_staff_details': user_staff_details,
             'tournaments': tournaments,
             'years': years,
         }
     )
 
-def TournamentTeams(request, tournament_slug):
+def tournament_teams(request, tournament_slug):
     user_staff_details = get_user_staff_details(request)
 
     tournament = requests.get(url=f'{ api_base_url }/tournaments/{ tournament_slug }/').json()
     teams_in_tournament = requests.get(url=f'{ api_base_url }/teams/?tournament={ tournament_slug }').json()
 
-    return render(request, 'TournamentTeams.html', {
+    return render(request, 'tournament_teams.html', {
             'user_staff_details': user_staff_details,
             'teams_in_tournament':teams_in_tournament,
             'tournament':tournament,
         }
     )
 
-def TournamentTeamPlayers(request, tournament_slug, team_slug):
+def tournament_team_players(request, tournament_slug, team_slug):
     user_staff_details = get_user_staff_details(request)
 
     tournament = requests.get(url=f'{ api_base_url }/tournaments/{ tournament_slug }/').json()
@@ -69,7 +76,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
                 else:
                     player['player_submitted'] = 0 # No Checkmark
 
-            return render(request, 'TournamentTeamPlayers.html', {
+            return render(request, 'tournament_team_players.html', {
                     'user_staff_details': user_staff_details,
                     'players':players,
                     'tournament':tournament,
@@ -79,7 +86,7 @@ def TournamentTeamPlayers(request, tournament_slug, team_slug):
                 }
             )
 
-    return render(request, 'TournamentTeamPlayers.html', {
+    return render(request, 'tournament_team_players.html', {
             'user_staff_details': user_staff_details,
             'players':players,
             'tournament':tournament,

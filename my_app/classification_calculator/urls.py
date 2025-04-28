@@ -13,7 +13,8 @@ urlpatterns = [
 	path('upload/template/', views_admin_tools.download_upload_template),
 
 
-	path('', views.TournamentList),
-	path('t/<slug:tournament_slug>/', views.TournamentTeams),
-	path('t/<slug:tournament_slug>/<slug:team_slug>/', views.TournamentTeamPlayers),
+	path('', views.home),
+	path('tournament/', views.tournament_list),
+	path('tournament/<slug:tournament_slug>/', views.tournament_teams),
+	path('tournament/<slug:tournament_slug>/<slug:team_slug>/', views.tournament_team_players),
 ]

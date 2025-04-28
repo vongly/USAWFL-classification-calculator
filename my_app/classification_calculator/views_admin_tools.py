@@ -301,6 +301,9 @@ def upload_update_success(request):
     results_created_players = request.session.get('results_created_players', None)
     results_created_update_tournament_players = request.session.get('results_created_update_tournament_players', None)
 
+    tournament_players_created = []
+    tournament_players_updated = []
+
     if results_created_players:
         player_ids = [ str(player['id']) for player in results_created_players ]
         player_ids_string = f'?pid={ "&pid=".join(player_ids) }'
@@ -315,16 +318,15 @@ def upload_update_success(request):
             tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
 
             tournament_players_created = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }').json()
-        else:
-            tournament_players_created = []
 
         if results_created_update_tournament_players['updated'] != []:
             tournament_player_ids = [ str(tp['id']) for tp in results_created_update_tournament_players['updated'] ]
             tournament_player_ids_string = f'?tpid={ "&tpid=".join(tournament_player_ids) }'
 
             tournament_players_updated = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_player_ids_string }').json()
-        else:
-            tournament_players_updated = []
+
+    if not players_created and not tournament_players_created and not tournament_players_updated:
+        return HttpResponseRedirect('/upload/')
 
     return render(request, 'upload_update_success.html', {
             'user_staff_details': user_staff_details,

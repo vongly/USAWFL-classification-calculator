@@ -2,7 +2,11 @@
 
 {% block content %}
 
-	<h3 class="center">{{ tournament.city }} {{ tournament.year }}</h3>
+	<h3 class="center">
+		<a href="../">Tournaments</a>
+		<br>
+		{{ tournament.city }} {{ tournament.year }}
+	</h3>
 	<div class="row">
 		<div class="col l5 m4 s3"></div>
 		<div class="col l2 m4 s6">
