@@ -92,12 +92,12 @@
 		<strong>
             {% if user_staff_details.user %}
                 {% if user_staff_details.user.is_staff %}
-                    <li><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
-                    <li><a href="/upload/">Upload</a></li>
+                    <li style="padding-top: 3px;"><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
+                    <li style="padding-top: 3px;"><a href="/upload/">Upload</a></li>
                 {% endif %}
-                <li><a href="/logout/">Logout</a></li>
+                <li style="padding-top: 3px;"><a href="/logout/">Logout</a></li>
             {% else %}
-                <li><a href="/login/">Login</a></li>
+                <li style="padding-top: 3px;"><a href="/login/">Login</a></li>
             {% endif %}
         </strong>
 	</ul>
@@ -109,7 +109,7 @@
                 <li><a href="/upload/">Upload</a></li>
             {% endif %}
             <li><a href="/logout/">Logout</a></li>
-		{% else %}
+            {% else %}
 			<li><a href="/login/">Login</a></li>
 		{% endif %}
 	</ul>
