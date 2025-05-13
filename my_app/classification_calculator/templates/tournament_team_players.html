@@ -5,9 +5,9 @@
 {% for tournament_player in tournament_players %}	 					
 	<script>
 		$(function() {
-				$(".toggle-trigger-{{ tournament_player.id }}").click(function(){
-					$(".toggle_element_{{ tournament_player.id }}").slideToggle(300, "swing");
-				});
+			$(".toggle-trigger-{{ tournament_player.id }}").click(function(){
+				$(".toggle_element_{{ tournament_player.id }}").slideToggle(300, "swing");
+			});
 		});
 	</script>
 {% endfor %}
@@ -140,7 +140,7 @@
 							{% endif %}
 
 						{% endfor %}
-					</tbody>	
+
 				</table>
 			</div>
 			<div class="col l2 m2 s1"></div>
