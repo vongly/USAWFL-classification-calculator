@@ -117,7 +117,7 @@
 						</div>
 					</div>
 				
-					{% if user_staff_details.user %}
+					{% if user_staff_details.user and stats %}
 						<div class="toggle-container initiallyHidden" id="toggle-element-{{ tournament_player.id }}">
 							{% for stat in stats %}
 								<div class="grid-row stat-row">
