@@ -51,10 +51,12 @@ def refresh_token(request):
 
 
 def login(request):
+    previous_url = request.session.get('previous_url')
     user_staff_details = get_user_staff_details(request)
 
     if user_staff_details['user']:
-        return HttpResponseRedirect('/')
+        response = HttpResponseRedirect(previous_url)
+        return response
     else:
         pass
 
@@ -73,7 +75,7 @@ def login(request):
 
         if call_validate_user.status_code == 200:
             tokens = call_validate_user.json()
-            response = HttpResponseRedirect('/')
+            response = HttpResponseRedirect(previous_url)
             response.set_cookie(
                 key=f'{ token_name }_access',
                 value=tokens['access'],
@@ -116,10 +118,11 @@ def login(request):
 
 
 def logout(request):
+    previous_url = request.session.get('previous_url')
     user_staff_details = get_user_staff_details(request)
 
     if user_staff_details['user']:
-        response = HttpResponseRedirect('/')
+        response = HttpResponseRedirect(previous_url)
         response.delete_cookie(f'{ token_name }_access')
         response.delete_cookie(f'{ token_name }_refresh')
         return response
