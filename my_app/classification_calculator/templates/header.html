@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+
         <style type="text/css">
             html,body{
                 overflow-x: hidden;
@@ -63,6 +64,19 @@
             .extra-margin-bottom {
                 padding-bottom: 8px;
             }
+            .classification-checkbox {
+                padding-bottom: 7px;
+            }
+            .stat-row {
+                height: 2px;
+                padding: 1px;
+                font-size: 12px;
+                line-height: 0;
+            }
+            .toast.toast-large {
+                font-size: 1.0rem;
+                padding: 20px 24px;
+                }
         </style>
 
     </head>
@@ -83,7 +97,7 @@
                     onClick: true,
                     coverTrigger: false,
                     closeOnClick: true,
-                });            
+                });
 
         });
     </script>
@@ -93,6 +107,7 @@
             {% if user_staff_details.user %}
                 {% if user_staff_details.user.is_staff %}
                     <li style="padding-top: 3px;"><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
+                    <li style="padding-top: 3px;"><a href="/stats/">Stats</a></li>
                     <li style="padding-top: 3px;"><a href="/upload/">Upload</a></li>
                 {% endif %}
                 <li style="padding-top: 3px;"><a href="/logout/">Logout</a></li>
@@ -106,6 +121,7 @@
 		{% if user_staff_details.user %}
             {% if user_staff_details.user.is_staff %}
                 <li><a href="{{ user_staff_details.admin_url }}/login/">Admin</a></li>
+                <li><a href="/stats/">Stats</a></li>
                 <li><a href="/upload/">Upload</a></li>
             {% endif %}
             <li><a href="/logout/">Logout</a></li>

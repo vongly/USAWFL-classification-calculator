@@ -27,13 +27,15 @@ def refresh_token(request):
             f'{ token_name }_access',
             tokens['access'],
             httponly=True,
-            samesite='Strict',
+            secure=False,
+            samesite='Lax',
         )
         response.set_cookie(
             f'{ token_name }_refresh',
             tokens['refresh'],
             httponly=True,
-            samesite='Strict',
+            secure=False,
+            samesite='Lax',
         )
 
         return response
@@ -52,7 +54,7 @@ def login(request):
     user_staff_details = get_user_staff_details(request)
 
     if user_staff_details['user']:
-        HttpResponseRedirect('/')
+        return HttpResponseRedirect('/')
     else:
         pass
 
@@ -73,16 +75,18 @@ def login(request):
             tokens = call_validate_user.json()
             response = HttpResponseRedirect('/')
             response.set_cookie(
-                f'{ token_name }_access',
-                tokens['access'],
+                key=f'{ token_name }_access',
+                value=tokens['access'],
                 httponly=True,
-                samesite='Strict',
+                secure=False,
+                samesite='Lax',
             )
             response.set_cookie(
-                f'{ token_name }_refresh',
-                tokens['refresh'],
+                key=f'{ token_name }_refresh',
+                value=tokens['refresh'],
                 httponly=True,
-                samesite='Strict',
+                secure=False,
+                samesite='Lax',
             )
 
             return response
@@ -123,13 +127,54 @@ def logout(request):
 
 
 
+def stats(request):
+    user_staff_details = get_user_staff_details(request)
+
+    if not user_staff_details['user']['is_staff']:
+        return HttpResponseRedirect('/')
+    elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
+        return HttpResponseRedirect('/refresh/')
+    else:
+        pass
+
+    stats = requests.get(url=f'{ api_base_url }/stats/').json()
+
+    if request.method == 'POST':
+        form = request.POST
+        
+        name = form.get('name')
+        slug = form.get('slug')
+        value = form.get('value')
+        value = 1 if value == '' else int(value)
+
+        data = {
+            'name': name,
+            'slug': slug,
+            'value': value,
+        }
+
+        response = requests.post(
+            f'{ api_base_url }/stats/',
+            json=data,
+            headers=user_staff_details['headers']
+        )
+
+        return HttpResponseRedirect('/stats/')
+
+    return render(request, 'stats.html', {
+            'user_staff_details': user_staff_details,
+            'stats': stats,
+        }
+    )
+
+
 def upload_update(request):
     user_staff_details = get_user_staff_details(request)
 
     if not user_staff_details['user']['is_staff']:
-        HttpResponseRedirect('/')
+        return HttpResponseRedirect('/')
     elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
-        HttpResponseRedirect('/refresh/')
+        return HttpResponseRedirect('/refresh/')
     else:
         pass
 
@@ -137,7 +182,6 @@ def upload_update(request):
     delete_session_item(request, 'results_created_players')
     delete_session_item(request, 'results_created_update_tournament_players')
 
-    user = user_staff_details['user']
     headers = user_staff_details['headers']
 
     # For template, allows user to download w/o static file
@@ -185,8 +229,7 @@ def upload_update(request):
                 break
 
             return render(request, 'upload_update.html', {
-                    'user': user,
-                    'admin_url': admin_url,
+                    'user_staff_details': user_staff_details,
                     'tournaments': tournaments,
                     'teams': teams,
                     'upload_error_message': upload_error_message,
@@ -342,9 +385,9 @@ def download_upload_template(request):
     user_staff_details = get_user_staff_details(request)
 
     if not user_staff_details['user']['is_staff']:
-        HttpResponseRedirect('/')
+        return HttpResponseRedirect('/')
     elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
-        HttpResponseRedirect('/refresh/')
+        return HttpResponseRedirect('/refresh/')
     else:
         pass
 

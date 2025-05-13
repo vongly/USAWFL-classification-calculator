@@ -30,5 +30,11 @@ urlpatterns = [
 
     #   TournamentPlayers - specific upload/update view
     path('create_update/tournament_players/', views.TournamentPlayerCreateUpdate.as_view()),
+
+    #   Stats
+    path('stats/', views.StatList.as_view()),
+
+    #   PlayerStats
+    path('player_stats/', views.PlayerStatList.as_view()),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)

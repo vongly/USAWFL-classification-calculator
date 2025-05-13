@@ -12,6 +12,8 @@ urlpatterns = [
 	path('upload/success/', views_admin_tools.upload_update_success),
 	path('upload/template/', views_admin_tools.download_upload_template),
 
+	path('stats/', views_admin_tools.stats),
+
 
 	path('', views.home),
 	path('tournament/', views.tournament_list),

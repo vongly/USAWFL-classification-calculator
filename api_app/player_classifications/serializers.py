@@ -55,3 +55,24 @@ class TournamentPlayerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TournamentPlayer
         fields = '__all__'
+
+class StatSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Stat
+        fields = '__all__'
+
+class PlayerStatSerializer(serializers.ModelSerializer):
+    tournament_player = TournamentPlayerSerializer(read_only=True)
+    stat = StatSerializer(read_only=True)
+    opponent = TeamSerializer(read_only=True)
+
+    class Meta:
+        model = models.PlayerStat
+        fields = '__all__'
+
+class PlayerStatCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.PlayerStat
+        fields = '__all__'

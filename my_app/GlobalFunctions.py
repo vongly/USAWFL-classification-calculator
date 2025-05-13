@@ -44,6 +44,8 @@ def get_user_staff_details(request):
         'admin_url': admin_url,
         'access_token': access_token,
         'refresh_required': refresh_required,
+        'api_base_url': api_base_url,
+        'token_name': token_name,
     }
 
     return user_details

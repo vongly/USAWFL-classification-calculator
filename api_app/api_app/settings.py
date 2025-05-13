@@ -4,7 +4,7 @@ import os
 import sys
 
 sys.path.append('../')
-from env import MY_SECRET_KEY, MY_ALLOWED_HOSTS, DEBUG_SETTING
+from env import MY_SECRET_KEY, MY_ALLOWED_HOSTS, DEBUG_SETTING, FRONTEND_URL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'player_classifications.apps.PlayerClassificationsConfig',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -91,6 +92,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api_app.middleware.RemoveDRFLinkHeaderMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'api_app.urls'
@@ -151,3 +153,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_URL,
+]

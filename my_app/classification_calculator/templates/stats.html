@@ -1,0 +1,75 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+    <div class="row" style="height: 15px;"></div>
+    <div class="row"></div>
+    <div class="row">
+        <div class="col l5 m5 s3"></div>
+        <div class="col l2 m2 s6">
+            <div class="row center">
+                <h5>Stats</h5>
+                (Name - Slug - Value)
+            </div>
+            <div class="row" style="height:250px; overflow:auto; margin-right: 1px;">
+                <table>
+                    <tr></tr>
+                    {% for stat in stats %}
+                        <tr>
+                            <td class="center">{{ stat.name }} - {{ stat.slug }} - {{ stat.value }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="col l5 m5 s3"></div>
+    </div>
+    <div class="row center">
+        <div class="col s3"></div>
+        <div class="col s6">
+            <h5>Add/Update Stat</h5>
+        </div>
+    </div>
+    <div class="row"></div>
+    {% if upload_error_message %}
+        <div class="row"></div>
+        <div class="row center" style="color: red;"><strong>{{ upload_error_message }}</strong></div>
+        <div class="row"></div>
+    {% endif %}
+    <div class="row col s12 center">
+        <div class="col l5 m5 s2"></div>
+            <div class="col l2 m2 s8">
+                <form action="./" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="row">
+                            <div class="input-field">
+                                <input id="name" name="name" type="text" required autofocus>
+                                <label class="active" for="name">name</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field">
+                                <input id="slug" name="slug" type="text" required>
+                                <label class="active" for="slug">slug</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field">
+                                <input id="value" name="value" type="number">
+                                <label class="active" for="value">value (default value is 1)</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="waves-effect waves-light btn-large red darken-4" type="submit" value="submit">Add</button>
+                        </div>
+                        <div class="row">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        <div class="col l5 m5 s2"></div>
+    </div>
+
+
+{% endblock %}

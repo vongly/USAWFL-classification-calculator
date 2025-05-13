@@ -1,15 +1,16 @@
 from django.shortcuts import render, HttpResponseRedirect
 
 from env import api_base_url, token_name, API_KEY
-from GlobalFunctions import get_user_staff_details
+from GlobalFunctions import get_user_staff_details, delete_session_item
 
 import requests
-import jwt
 
+from collections import defaultdict
+import json
 
 def home(request):
     user_staff_details = get_user_staff_details(request)
-
+    
     return render(request, 'home.html', {
             'user_staff_details': user_staff_details,
         }
@@ -45,19 +46,65 @@ def tournament_teams(request, tournament_slug):
 
 def tournament_team_players(request, tournament_slug, team_slug):
     user_staff_details = get_user_staff_details(request)
+    
+    if 'submit_details' in request.session:
+        submit_details = request.session['submit_details']
+        delete_session_item(request, 'submit_details')
+    else:
+        submit_details = None
 
     tournament = requests.get(url=f'{ api_base_url }/tournaments/{ tournament_slug }/').json()
     team = requests.get(url=f'{ api_base_url }/teams/{ team_slug }/').json()
-    players = requests.get(url=f'{ api_base_url }/tournament_players/?tournament={ tournament_slug }&team={ team_slug }').json()
+    tournament_players = requests.get(url=f'{ api_base_url }/tournament_players/?tournament={ tournament_slug }&team={ team_slug }').json()
+    stats = requests.get(url=f'{ api_base_url }/stats/?active=true/').json()
+
+    teams_in_tournament = requests.get(url=f'{ api_base_url }/teams/?tournament={ tournament_slug }').json()
+    possible_opponents = [ team for team in teams_in_tournament if team['slug'] != team_slug ]
+
+    player_stats = requests.get(url=f'{ api_base_url }/player_stats/?tournament={ tournament_slug }&team={ team_slug }').json()
+
+    # Use tuple of frozen keys as a unique group identifier
+    group_counts = {}
+
+    for item in player_stats:
+        key = (
+            json.dumps(item['tournament_player'], sort_keys=True),
+            json.dumps(item['stat'], sort_keys=True),
+            json.dumps(item['opponent'], sort_keys=True),
+        )
+
+        if key not in group_counts:
+            group_counts[key] = {
+                'tournament_player': item['tournament_player'],
+                'stat': item['stat'],
+                'opponent': item['opponent'],
+                'count': 1,
+            }
+        else:
+            group_counts[key]['count'] += 1
+
+    # Convert to list if needed
+    player_stats = list(group_counts.values())
 
     if request.method == 'POST':
+        if 'opponent-selected' in request.POST:
+            opponent_selected = int(request.POST.get('opponent-selected'))
+
+            submit_details = {
+                'opponent_selected': opponent_selected
+            }
+            request.session['submit_details'] = submit_details
+
+        else:
+            opponent_selected = None
+
         if 'clear' in request.POST:
             pass
         elif 'submit' in request.POST:
 
-            submitted_tournamentplayer_ids_strings = request.POST.getlist('players_checked')
-            submitted_tournamentplayer_ids = [ int(id) for id in submitted_tournamentplayer_ids_strings ]
-            submitted_players = [ player for player in players if player['id'] in submitted_tournamentplayer_ids ]
+            submitted_tournament_player_ids_strings = request.POST.getlist('players_checked')
+            submitted_tournament_player_ids = [ int(id) for id in submitted_tournament_player_ids_strings ]
+            submitted_players = [ tournament_player for tournament_player in tournament_players if tournament_player['id'] in submitted_tournament_player_ids ]
 
             classification_values = [ int(player['classification_value']) for player in submitted_players ]
 
@@ -65,32 +112,28 @@ def tournament_team_players(request, tournament_slug, team_slug):
             classification_total = sum(classification_values)
 
             submit_details = {
-                'player_count' : player_count,
-                'classification_total' : classification_total,
+                'player_count': player_count,
+                'classification_total': classification_total,
+                'opponent_selected': opponent_selected,
+                'submitted_tournament_player_ids': submitted_tournament_player_ids
             }
 
-            # Handles the ability to maintain a checkmark after form is submitted
-            for player in players:
-                if player['player']['id'] in submitted_tournamentplayer_ids:
-                    player['player_submitted'] = 1 # Maintains Checkmark
-                else:
-                    player['player_submitted'] = 0 # No Checkmark
+            request.session['submit_details'] = submit_details
 
-            return render(request, 'tournament_team_players.html', {
-                    'user_staff_details': user_staff_details,
-                    'players':players,
-                    'tournament':tournament,
-                    'team':team,
-                    'submit_details':submit_details,
-                    'submitted_tournamentplayer_ids':submitted_tournamentplayer_ids,
-                }
-            )
+            return HttpResponseRedirect(f'/tournament/{ tournament_slug }/{ team_slug }/')
+        return HttpResponseRedirect(f'/tournament/{ tournament_slug }/{ team_slug }/')
 
     return render(request, 'tournament_team_players.html', {
             'user_staff_details': user_staff_details,
-            'players':players,
+            'tournament_slug': tournament_slug,
+            'team_slug': team_slug,
             'tournament':tournament,
-            'team':team
+            'team':team,
+            'tournament_players':tournament_players,
+            'stats':stats,
+            'possible_opponents': possible_opponents,
+            'player_stats': player_stats,
+            'submit_details':submit_details,
         }
     )
 

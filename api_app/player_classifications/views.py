@@ -68,11 +68,11 @@ class TeamList(ListCreateAPIView):
         tournament_slug = self.request.query_params.get('tournament', None)
 
         if tournament_slug:
-            all_players_in_tournament = models.TournamentPlayer.objects.all().filter(tournament__slug=tournament_slug)
+            all_players_in_tournament = models.TournamentPlayer.objects.filter(tournament__slug=tournament_slug)
             teams_in_tournament = list(all_players_in_tournament.values('player__team').distinct())
             teams_in_tournament_list = [ item['player__team'] for item in teams_in_tournament]
 
-            queryset = models.Team.objects.all().filter(id__in=teams_in_tournament_list).order_by('name')
+            queryset = models.Team.objects.filter(id__in=teams_in_tournament_list).order_by('name')
         else:
             queryset = models.Team.objects.all()
         
@@ -111,15 +111,15 @@ class PlayerList(ListCreateAPIView):
         if team_slugs and player_ids:
             try:
                 player_ids = [ int(player_id) for player_id in player_ids ]
-                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs, id__in=player_ids)
+                queryset = models.Player.objects.filter(Team__slug__in=team_slugs, id__in=player_ids)
             except:
-                queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs)
+                queryset = models.Player.objects.filter(Team__slug__in=team_slugs)
         elif team_slugs:
-            queryset = models.Player.objects.all().filter(Team__slug__in=team_slugs)
+            queryset = models.Player.objects.filter(Team__slug__in=team_slugs)
         elif player_ids:
             try:
                 player_ids = [ int(player_id) for player_id in player_ids ]
-                queryset = models.Player.objects.all().filter(id__in=player_ids)
+                queryset = models.Player.objects.filter(id__in=player_ids)
             except:
                 pass
         else:
@@ -174,16 +174,16 @@ class TournamentPlayerList(ListAPIView):
 
         if tournament_player_ids:
             tournament_player_ids = [ int(tournament_player_id) for tournament_player_id in tournament_player_ids ]
-            queryset = models.TournamentPlayer.objects.all().filter(id__in=tournament_player_ids)
+            queryset = models.TournamentPlayer.objects.filter(id__in=tournament_player_ids)
         elif player_ids:
             player_ids = [ int(player_id) for player_id in player_ids ]
-            queryset = models.TournamentPlayer.objects.all().filter(player__id__in=player_ids)
+            queryset = models.TournamentPlayer.objects.filter(player__id__in=player_ids)
         elif tournament_slugs and team_slugs:
-            queryset = models.TournamentPlayer.objects.all().filter(tournament__slug__in=tournament_slugs, player__team__slug__in=team_slugs)
+            queryset = models.TournamentPlayer.objects.filter(tournament__slug__in=tournament_slugs, player__team__slug__in=team_slugs)
         elif tournament_slugs:
             queryset = models.TournamentPlayer.objects.filter(tournament__slug__in=tournament_slugs)
         elif team_slugs:
-            queryset = models.TournamentPlayer.objects.all().filter(player__team__slug__in=team_slugs)
+            queryset = models.TournamentPlayer.objects.filter(player__team__slug__in=team_slugs)
         else:
             queryset = models.TournamentPlayer.objects.all()
         
@@ -240,3 +240,100 @@ class TournamentPlayerCreateUpdate(APIView):
         if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
             return []
         return [IsStaffUser()]
+
+class StatList(ListCreateAPIView):
+    serializer_class = serializers.StatSerializer
+
+    def get_queryset(self):
+
+        is_active = self.request.query_params.get('is_active', None)
+        slug = self.request.query_params.get('slug', None)
+
+        if is_active and is_active.lower() in ['true','false'] and slug:
+            if is_active.lower() == 'true':
+                is_active_value = True
+            elif is_active.lower() == 'false':
+                is_active_value = False
+            queryset = models.Stat.objects.filter(is_active=is_active_value, slug=slug)
+        elif slug:
+            queryset = models.Stat.objects.filter(slug=slug)
+        elif is_active and is_active.lower() in ['true','false']:
+            if is_active.lower() == 'true':
+                is_active_value = True
+            elif is_active.lower() == 'false':
+                is_active_value = False
+            queryset = models.Stat.objects.filter(is_active=is_active_value)
+        else:
+            queryset = models.Stat.objects.all()
+        
+        queryset = queryset.order_by('name')
+
+        return queryset
+    
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
+
+
+class PlayerStatList(ListCreateAPIView):
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            serializer_class = serializers.PlayerStatSerializer
+            return serializer_class
+        serializer_class = serializers.PlayerStatCreateSerializer
+        return serializer_class
+
+    def get_queryset(self):
+
+
+        tournaments = self.request.query_params.getlist('tournament', None)
+        teams = self.request.query_params.getlist('team', None)
+        stats = self.request.query_params.getlist('stat', None)
+
+        if tournaments:
+            tournaments = [ tournament for tournament in tournaments ]
+        if teams:
+            teams = [ team for team in teams ]
+        if stats:
+            stats = [ stat for stat in stats ]
+
+        if tournaments and teams and stats:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__tournament__slug__in=tournaments,
+                tournament_player__player__team__slug__in=teams,
+                stat__slug__in=stats,
+            )
+        elif tournaments and teams:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__tournament__slug__in=tournaments,
+                tournament_player__player__team__slug__in=teams,
+            )
+        elif tournaments and stats:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__tournament__slug__in=tournaments,
+                stat__slug__in=stats,
+            )
+        elif teams and stats:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__tournament__slug__in=tournaments,
+                tournament_player__player__team__slug__in=teams,
+                stat__slug__in=stats,
+            )
+        elif tournaments:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__tournament__slug__in=tournaments,
+            )
+        elif teams:
+            queryset = models.PlayerStat.objects.filter(
+                tournament_player__player__team__slug__in=teams,
+            )
+        elif stats:
+            queryset = models.PlayerStat.objects.filter(
+                stat__slug__in=stats,
+            )
+        else:
+            queryset = models.PlayerStat.objects.all()
+
+        return queryset
