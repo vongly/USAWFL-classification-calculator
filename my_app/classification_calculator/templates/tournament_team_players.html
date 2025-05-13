@@ -90,57 +90,55 @@
 		<div class="row">
 			<div class="col l3 m3 s2"></div>
 			<div class="col l7 m7 s9">
-<!-- Header -->
-<div class="player-grid-header grid-row">
-	<div>No.</div>
-	<div>Name</div>
-	<div>Class</div>
-	<div></div>
-  </div>
+
+				<div class="player-grid-header grid-row">
+					<div>No.</div>
+					<div>Name</div>
+					<div>Class</div>
+					<div></div>
+				</div>
   
-  {% for tournament_player in tournament_players %}
-	<!-- Player Row -->
-	<div class="grid-row player-row toggle-trigger" data-player-id="{{ tournament_player.id }}">
-		<div class="toggle-trigger-{{ tournament_player.id }} expand-for-stats mid-font heavy-font" data-player-number="{{ tournament_player.player_number }}">
-			#{{ tournament_player.player_number }}
-		</div>
-		<div class="toggle-trigger-{{ tournament_player.id }}">{{ tournament_player.player.last_name }}, {{ tournament_player.player.first_name }}</div>
-		<div>{{ tournament_player.classification_value }}</div>
-		<div class="classification-checkbox">
-			<label>
-			{% if tournament_player.id in submit_details.submitted_tournament_player_ids %}
-				<input type="checkbox" class="filled-in" name="players_checked" checked value="{{ tournament_player.id }}">
-			{% else %}
-				<input type="checkbox" class="filled-in" name="players_checked" value="{{ tournament_player.id }}">
-			{% endif %}
-			<span></span>
-			</label>
-		</div>
-	</div>
-  
-	{% if user_staff_details.user %}
-	  <!-- Stat Rows -->
-	  <div class="toggle-container initiallyHidden" id="toggle-element-{{ tournament_player.id }}" style="display: none;">
-		{% for stat in stats %}
-		  <div class="grid-row stat-row">
-			<div></div>
-			<div class="stat-cell"
-				 data-stat-id="{{ stat.id }}"
-				 data-stat-name="{{ stat.name }}"
-				 data-player-id="{{ tournament_player.id }}"
-				 data-player-number="{{ tournament_player.player_number }}">
-			  <span>{{ stat.name }}</span>
-			  <i class="post-call-button tiny material-icons green-text text-darken-2">
-				add_circle
-			  </i>
-			</div>
-			<div></div>
-			<div></div>
-		  </div>
-		{% endfor %}
-	  </div>
-	{% endif %}
-  {% endfor %}
+				{% for tournament_player in tournament_players %}
+					<div class="grid-row player-row toggle-trigger" data-player-id="{{ tournament_player.id }}">
+						<div class="toggle-trigger-{{ tournament_player.id }} expand-for-stats mid-font heavy-font" data-player-number="{{ tournament_player.player_number }}">
+							#{{ tournament_player.player_number }}
+						</div>
+						<div class="toggle-trigger-{{ tournament_player.id }}">{{ tournament_player.player.last_name }}, {{ tournament_player.player.first_name }}</div>
+						<div>{{ tournament_player.classification_value }}</div>
+						<div class="classification-checkbox">
+							<label>
+							{% if tournament_player.id in submit_details.submitted_tournament_player_ids %}
+								<input type="checkbox" class="filled-in" name="players_checked" checked value="{{ tournament_player.id }}">
+							{% else %}
+								<input type="checkbox" class="filled-in" name="players_checked" value="{{ tournament_player.id }}">
+							{% endif %}
+							<span></span>
+							</label>
+						</div>
+					</div>
+				
+					{% if user_staff_details.user %}
+						<div class="toggle-container initiallyHidden" id="toggle-element-{{ tournament_player.id }}">
+							{% for stat in stats %}
+								<div class="grid-row stat-row">
+									<div></div>
+									<div class="stat-cell"
+										data-stat-id="{{ stat.id }}"
+										data-stat-name="{{ stat.name }}"
+										data-player-id="{{ tournament_player.id }}"
+										data-player-number="{{ tournament_player.player_number }}">
+										<span>{{ stat.name }}</span>
+										<i class="post-call-button tiny material-icons green-text text-darken-2">
+											add_circle
+										</i>
+									</div>
+									<div></div>
+									<div></div>
+								</div>
+							{% endfor %}
+						</div>
+					{% endif %}
+				{% endfor %}
 
 			</div>
 			<div class="col l2 m2 s1"></div>
