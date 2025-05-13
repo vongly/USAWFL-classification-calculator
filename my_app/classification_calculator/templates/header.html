@@ -65,7 +65,7 @@
                 padding-bottom: 8px;
             }
             .classification-checkbox {
-                padding-bottom: 7px;
+                padding-top: 9px;
             }
             .stat-row {
                 height: 2px;
@@ -76,7 +76,56 @@
             .toast.toast-large {
                 font-size: 1.0rem;
                 padding: 20px 24px;
+            }
+            .grid-row {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr 1fr;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #e0e0e0;
+                transition: background-color 0.2s ease;
+            }
+
+            /* Header style */
+            .player-grid-header {
+                font-weight: bold;
+                border-bottom: 1px solid #bdbdbd;
                 }
+
+            /* Hover highlight style (like Materialize's "highlight" class) */
+            .grid-row:hover {
+                background-color: #f0f0f0;
+            }
+
+            /* Toggle container spacing */
+            .toggle-container {
+                margin-bottom: 0.5rem;
+            }
+            .stat-row {
+                height: 35px;
+                padding-top: 6px;
+            }
+            .post-call-button {
+                padding-left: 3px;
+                vertical-align:text-bottom;
+                padding-top: 3px;
+            }
+            .year-row {
+                cursor: pointer;
+            }
+            .grid-row-tournament {
+                display: grid;
+                grid-template-columns: 1fr;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #e0e0e0;
+                transition: background-color 0.2s ease;
+            }
+            .grid-row-tournament:hover {
+                background-color: #f0f0f0;
+            }
         </style>
 
     </head>

@@ -6,7 +6,7 @@
 	<script>
 		$(function() {
 			$(".toggle-trigger-{{ tournament_player.id }}").click(function(){
-				$(".toggle_element_{{ tournament_player.id }}").slideToggle(300, "swing");
+				$("#toggle-element-{{ tournament_player.id }}").slideToggle(300, "swing");
 			});
 		});
 	</script>
@@ -90,58 +90,58 @@
 		<div class="row">
 			<div class="col l3 m3 s2"></div>
 			<div class="col l7 m7 s9">
-				<table class="centered highlight">
-					<thead>
-						<tr>
-							<th>No.</th>
-							<th>Name</th>
-							<th>Class</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for tournament_player in tournament_players %}
-							<tr>
-								<td id="{{ tournament_player.id }}" class="toggle-trigger-{{ tournament_player.id }} expand-for-stats" data-player-number="{{ tournament_player.player_number }}"><span class="mid-font heavy-font">#{{ tournament_player.player_number }}</span></td>
-								<td class="toggle-trigger-{{ tournament_player.id }}">{{ tournament_player.player.last_name }}, {{ tournament_player.player.first_name }}</td>
-								<td>{{ tournament_player.classification_value }}</td>
-								<td class="classification-checkbox">
-									<label>
-										{% if tournament_player.id in submit_details.submitted_tournament_player_ids %}
-											<input type="checkbox" class="filled-in" name="players_checked" checked="checked" value={{ tournament_player.id }} />
-											<span></span>
-										{% else %}
-											<input type="checkbox" class="filled-in" name="players_checked" value={{ tournament_player.id }} />
-											<span></span>
-										{% endif %}
-									</label>
-								</td>
-							</tr>
+<!-- Header -->
+<div class="player-grid-header grid-row">
+	<div>No.</div>
+	<div>Name</div>
+	<div>Class</div>
+	<div></div>
+  </div>
+  
+  {% for tournament_player in tournament_players %}
+	<!-- Player Row -->
+	<div class="grid-row player-row toggle-trigger" data-player-id="{{ tournament_player.id }}">
+		<div class="toggle-trigger-{{ tournament_player.id }} expand-for-stats mid-font heavy-font" data-player-number="{{ tournament_player.player_number }}">
+			#{{ tournament_player.player_number }}
+		</div>
+		<div class="toggle-trigger-{{ tournament_player.id }}">{{ tournament_player.player.last_name }}, {{ tournament_player.player.first_name }}</div>
+		<div>{{ tournament_player.classification_value }}</div>
+		<div class="classification-checkbox">
+			<label>
+			{% if tournament_player.id in submit_details.submitted_tournament_player_ids %}
+				<input type="checkbox" class="filled-in" name="players_checked" checked value="{{ tournament_player.id }}">
+			{% else %}
+				<input type="checkbox" class="filled-in" name="players_checked" value="{{ tournament_player.id }}">
+			{% endif %}
+			<span></span>
+			</label>
+		</div>
+	</div>
+  
+	{% if user_staff_details.user %}
+	  <!-- Stat Rows -->
+	  <div class="toggle-container initiallyHidden" id="toggle-element-{{ tournament_player.id }}" style="display: none;">
+		{% for stat in stats %}
+		  <div class="grid-row stat-row">
+			<div></div>
+			<div class="stat-cell"
+				 data-stat-id="{{ stat.id }}"
+				 data-stat-name="{{ stat.name }}"
+				 data-player-id="{{ tournament_player.id }}"
+				 data-player-number="{{ tournament_player.player_number }}">
+			  <span>{{ stat.name }}</span>
+			  <i class="post-call-button tiny material-icons green-text text-darken-2">
+				add_circle
+			  </i>
+			</div>
+			<div></div>
+			<div></div>
+		  </div>
+		{% endfor %}
+	  </div>
+	{% endif %}
+  {% endfor %}
 
-							{% if user_staff_details.user %}
-
-								{% for stat in stats %}
-									<tr class="stat-row toggle_element_{{ tournament_player.id }} initiallyHidden">
-										<td></td>
-										<td class="stat-cell" 
-											data-stat-id="{{ stat.id }}" 
-											data-stat-name="{{ stat.name }}" 
-											data-player-id="{{ tournament_player.id }}" 
-											data-player-number="{{ tournament_player.player_number }}"
-											style="padding-top: 15px; padding-bottom: 15px;">
-										<span>{{ stat.name }}</span>
-										<i class="tiny material-icons green-text text-darken-2" style="padding-left: 3px; vertical-align:text-bottom;">add_circle</i>
-										</td>
-										<td></td>
-										<td></td>
-									</tr>
-								{% endfor %}
-
-							{% endif %}
-
-						{% endfor %}
-
-				</table>
 			</div>
 			<div class="col l2 m2 s1"></div>
 		</div>
@@ -164,82 +164,76 @@
 
 <script>
 
-	const API_BASE_URL = "{{ user_staff_details.api_base_url|escapejs }}";
-	const tournamentSlug = "{{ tournament_slug }}";
-	const teamSlug = "{{ team_slug }}";
-
-	document.addEventListener("DOMContentLoaded", function () {
-	// Init Materialize selects
+document.addEventListener("DOMContentLoaded", function () {
+	const API_BASE_URL = "{{ user_staff_details.api_base_url|escapejs }}"; // Django context var
+	const opponentSelect = document.getElementById("opponent-selected");
 	const elems = document.querySelectorAll("select");
 	M.FormSelect.init(elems);
 
-	const opponentSelect = document.getElementById("opponent-selected");
+  document.addEventListener("click", function (e) {
+    const icon = e.target.closest(".post-call-button");
+    if (!icon) return;
 
-	// Delegate clicks on the document to handle dynamically shown icons
-	document.addEventListener("click", function (e) {
-		const icon = e.target.closest("i.material-icons");
+    const td = icon.closest(".stat-cell");
+    if (!td) return;
 
-		if (!icon || icon.textContent.trim() !== "add_circle") return;
+    const statId = parseInt(td.dataset.statId);
+    const statName = td.dataset.statName;
+    const playerId = parseInt(td.dataset.playerId);
+    const playerNumber = td.dataset.playerNumber;
 
-		const td = icon.closest("td");
-		if (!td || !td.classList.contains("stat-cell")) return;
+    if (!opponentSelect || !opponentSelect.value) {
+      alert("Please select an opponent.");
+      return;
+    }
 
-		const statId = parseInt(td.dataset.statId);
-		const statName = td.dataset.statName || "Stat";
-		const playerId = parseInt(td.dataset.playerId);
-		const playerNumber = td.dataset.playerNumber || playerId;
+    const opponentId = parseInt(opponentSelect.value);
 
-		const opponentId = opponentSelect?.value;
-		if (!opponentId) {
-		alert("Please select an opponent.");
-		return;
-		}
+    const payload = {
+      opponent: opponentId,
+      tournament_player: playerId,
+      stat: statId
+    };
 
-		const parsedOpponentId = parseInt(opponentId);
-		const payload = {
-		opponent: parsedOpponentId,
-		tournament_player: playerId,
-		stat: statId
-		};
+    // Demo mode: skip POST
+    if (opponentId === 0) {
+      console.log("[Demo] Skipping POST");
+      M.toast({
+        html: `[Demo] ${statName} added for player #${playerNumber}`,
+        displayLength: 4000,
+        classes: "toast-large"
+      });
+      return;
+    }
 
-		if (parsedOpponentId === 0) {
-		console.log("🔧 Demo mode: Skipping POST call");
-		M.toast({
-			html: `[Demo] ${statName} was added for player #${playerNumber}`,
-			displayLength: 5000,
-			classes: "toast-large"
-		});
-		return;
-		}
-
-		fetch(`${API_BASE_URL}/player_stats/`, {
-		method: "POST",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify(payload)
-		})
-		.then(response => {
-			if (!response.ok) {
-			throw new Error(`POST failed with status ${response.status}`);
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log("✅ Stat recorded:", data);
-			M.toast({
-			html: `${statName} was added for player #${playerNumber}`,
-			displayLength: 5000,
-			classes: "toast-large"
-			});
-		})
-		.catch(error => {
-			console.error("❌ POST error:", error);
-			alert(`An error occurred while updating the stat: ${error.message || error}`);
-		});
-	});
-	});
+    fetch(`${API_BASE_URL}/player_stats/`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`POST failed with status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("✅ Stat added:", data);
+        M.toast({
+          html: `${statName} added for player #${playerNumber}`,
+          displayLength: 4000,
+          classes: "toast-large"
+        });
+      })
+      .catch(error => {
+        console.error("❌ POST failed:", error);
+        alert(`An error occurred: ${error.message || error}`);
+      });
+  });
+});
 
 </script>
 

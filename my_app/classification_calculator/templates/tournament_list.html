@@ -6,7 +6,7 @@
 <script>
 	$(function() {
 			$("#toggle_button_{{ year }}").click(function(){
-				$("#toggle_element_{{ year }}").slideToggle(700, "swing");
+				$("#toggle_element_{{ year }}").slideToggle(300, "swing");
 			});
 	});
 </script>
@@ -15,34 +15,32 @@
 	<h3 class="center">Tournaments</h3>
 	<div class="row">
 		<div class="col l5 m4 s3"></div>
-		<div class="col l2 m4 s6">
-			<table class="centered">
-				<thead>
-					<tr>
-						<td></td>				
-					</tr>
-				</thead>
-				{% for year in years %}	 					
-					<tbody id="toggle_button_{{ year }}">
-						<tr>
-							<td class="larger-font">
-								{{ year }}
-							</td>
-						</tr>
-					</tbody>
-					<tbody id="toggle_element_{{ year }}" class="initiallyHidden">
+		<div class="col l2 m4 s6 center">
+
+			<div class="year-list">
+
+				<div class="grid-row-tournament year-row toggle-trigger"></div>
+
+				{% for year in years %}
+					<!-- Year row (clickable) -->
+					<div class="grid-row-tournament year-row toggle-trigger" id="toggle_button_{{ year }}" data-year="{{ year }}">
+						<div class="larger-font">{{ year }}</div>
+					</div>
+				
+					<!-- Hidden tournament links -->
+					<div class="toggle-container initiallyHidden" id="toggle_element_{{ year }}">
 						{% for tournament in tournaments %}
 							{% if year == tournament.year %}
-								<tr class=" ">
-									<td>
+								<div class="grid-row-tournament">
+									<div style="height: 35px; padding-top: 6px;">
 										<a href="./{{ tournament.slug }}">{{ tournament.city }} {{ tournament.year }}</a>
-									</td>
-								</tr>
+									</div>
+								</div>
 							{% endif %}
-						{% endfor %}					
-					</tbody>
-				{% endfor %}					
-			</table>
+						{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
 		</div>
 		<div class="col l5 m4 s3"></div>
 	</div>
