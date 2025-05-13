@@ -3,15 +3,14 @@
 {% block content %}
 
 {% for tournament_player in tournament_players %}	 					
-<script>
-	$(function() {
-			$(".toggle-trigger-{{ tournament_player.id }}").click(function(){
-				$("#toggle_element_{{ tournament_player.id }}").slideToggle(300, "swing");
-			});
-	});
-</script>
+	<script>
+		$(function() {
+				$(".toggle-trigger-{{ tournament_player.id }}").click(function(){
+					$(".toggle_element_{{ tournament_player.id }}").slideToggle(300, "swing");
+				});
+		});
+	</script>
 {% endfor %}
-
 
 	<h3 class="center">
 		<a href="../">{{ tournament.city }} {{ tournament.year }}</a>
@@ -121,19 +120,22 @@
 
 							{% if user_staff_details.user %}
 
-								<tbody id="toggle_element_{{ tournament_player.id }}" class="initiallyHidden">
-									
-									{% for stat in stats %}
-									<tr class="stat-row">
+								{% for stat in stats %}
+									<tr class="stat-row toggle_element_{{ tournament_player.id }} initiallyHidden">
 										<td></td>
-										<td class="{{ stat.id }}" data-stat-name="{{ stat.name }}" style="padding-top: 15px; padding-bottom: 15px;">
-										<span >{{ stat.name }}</span> <i class="tiny material-icons green-text text-darken-2" style="padding-left: 3px; vertical-align:text-bottom;">add_circle</i>
+										<td class="stat-cell" 
+											data-stat-id="{{ stat.id }}" 
+											data-stat-name="{{ stat.name }}" 
+											data-player-id="{{ tournament_player.id }}" 
+											data-player-number="{{ tournament_player.player_number }}"
+											style="padding-top: 15px; padding-bottom: 15px;">
+										<span>{{ stat.name }}</span>
+										<i class="tiny material-icons green-text text-darken-2" style="padding-left: 3px; vertical-align:text-bottom;">add_circle</i>
 										</td>
 										<td></td>
 										<td></td>
- 									</tr>
-									{% endfor %}
-								</tbody>
+									</tr>
+								{% endfor %}
 
 							{% endif %}
 
@@ -167,81 +169,75 @@
 	const teamSlug = "{{ team_slug }}";
 
 	document.addEventListener("DOMContentLoaded", function () {
+	// Init Materialize selects
 	const elems = document.querySelectorAll("select");
 	M.FormSelect.init(elems);
 
 	const opponentSelect = document.getElementById("opponent-selected");
 
-	document.querySelectorAll("tr.stat-row td[class] i.material-icons").forEach(icon => {
-		if (icon.textContent.trim() === "add_circle") {
-		icon.style.cursor = "pointer";
+	// Delegate clicks on the document to handle dynamically shown icons
+	document.addEventListener("click", function (e) {
+		const icon = e.target.closest("i.material-icons");
 
-		icon.addEventListener("click", function (e) {
-			e.stopPropagation();
+		if (!icon || icon.textContent.trim() !== "add_circle") return;
 
-			const td = icon.closest("td");
-			const statId = td.className.trim();
-			const statName = td.getAttribute("data-stat-name") || "Stat";
+		const td = icon.closest("td");
+		if (!td || !td.classList.contains("stat-cell")) return;
 
-			const statRow = td.closest("tr");
-			const statTableBody = statRow.closest("tbody");
-			const playerRow = statTableBody.previousElementSibling;
-			const playerCell = playerRow.querySelector(".expand-for-stats");
+		const statId = parseInt(td.dataset.statId);
+		const statName = td.dataset.statName || "Stat";
+		const playerId = parseInt(td.dataset.playerId);
+		const playerNumber = td.dataset.playerNumber || playerId;
 
-			const playerId = playerCell.id;
-			const playerNumber = playerCell.getAttribute("data-player-number") || playerId;
-			const opponentId = opponentSelect.value;
-
-			if (!opponentId) {
-			alert("Please select an opponent.");
-			return;
-			}
-
-			const parsedOpponentId = parseInt(opponentId);
-			const payload = {
-			opponent: parsedOpponentId,
-			tournament_player: parseInt(playerId),
-			stat: parseInt(statId)
-			};
-
-			// DEMO MODE: Skip POST if opponent is 0
-			if (parsedOpponentId === 0) {
-			console.log("🔧 Demo mode: Skipping POST call");
-			M.toast({
-				html: `[Demo] ${statName} was added for player #${playerNumber}`,
-				displayLength: 3000,
-				classes: "toast-large"
-			});
-			return;
-			}
-
-			// POST if opponentId is valid
-			fetch(`${API_BASE_URL}/player_stats/`, {
-			method: "POST",
-			credentials: "include",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify(payload)
-			})
-			.then(response => {
-			if (!response.ok) throw new Error("GET failed");
-			return response.json();
-			})
-			.then(data => {
-			console.log("API response:", data);
-			M.toast({
-				html: `${statName} was added for player #${playerNumber}`,
-				displayLength: 5000,
-				classes: "toast-large"
-			});
-			})
-			.catch(error => {
-			console.error("Error:", error);
-			alert(`An error occurred while updating the stat: ${error.message || error.toString()}`);
-			});
-		});
+		const opponentId = opponentSelect?.value;
+		if (!opponentId) {
+		alert("Please select an opponent.");
+		return;
 		}
+
+		const parsedOpponentId = parseInt(opponentId);
+		const payload = {
+		opponent: parsedOpponentId,
+		tournament_player: playerId,
+		stat: statId
+		};
+
+		if (parsedOpponentId === 0) {
+		console.log("🔧 Demo mode: Skipping POST call");
+		M.toast({
+			html: `[Demo] ${statName} was added for player #${playerNumber}`,
+			displayLength: 5000,
+			classes: "toast-large"
+		});
+		return;
+		}
+
+		fetch(`${API_BASE_URL}/player_stats/`, {
+		method: "POST",
+		credentials: "include",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(payload)
+		})
+		.then(response => {
+			if (!response.ok) {
+			throw new Error(`POST failed with status ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log("✅ Stat recorded:", data);
+			M.toast({
+			html: `${statName} was added for player #${playerNumber}`,
+			displayLength: 5000,
+			classes: "toast-large"
+			});
+		})
+		.catch(error => {
+			console.error("❌ POST error:", error);
+			alert(`An error occurred while updating the stat: ${error.message || error}`);
+		});
 	});
 	});
 
