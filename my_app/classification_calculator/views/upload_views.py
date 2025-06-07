@@ -1,171 +1,14 @@
-from django.shortcuts import render, HttpResponseRedirect, redirect
+from django.shortcuts import render, HttpResponseRedirect
 from django.http import HttpResponse
 
-from GlobalFunctions import get_user_staff_details, delete_session_item
-from env import api_base_url, token_name, API_KEY
-import UploadDetails
+from env import api_base_url
+from utils.helpers import get_user_staff_details, delete_session_item
+import utils.upload_helpers as AddUpdateTournamentPlayers
 
 import requests
 import pandas as pd
 import json
 import csv
-
-
-def refresh_token(request):
-    access_token = request.COOKIES.get(f'{ token_name }_access')
-
-    previous_url = request.session['previous_url']
-
-    try:
-        url = f'{ api_base_url }/token/refresh/'
-        call = requests.post(url=url, data={'refresh': request.COOKIES.get(f'{ token_name }_refresh')})
-        tokens = call.json()
-
-        response = HttpResponseRedirect(previous_url)
-
-        response.set_cookie(
-            f'{ token_name }_access',
-            tokens['access'],
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-        )
-        response.set_cookie(
-            f'{ token_name }_refresh',
-            tokens['refresh'],
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-        )
-
-        return response
-
-    except:
-        if access_token:
-            response = HttpResponseRedirect('/login/')
-            response.delete_cookie(f'{ token_name }_access')
-            response.delete_cookie(f'{ token_name }_refresh')
-
-        return response
-
-
-
-def login(request):
-    user_staff_details = get_user_staff_details(request)
-
-    if user_staff_details['user']:
-        return HttpResponseRedirect('/')
-    else:
-        pass
-
-    if request.method == 'POST':
-        form = request.POST
-
-        data_validate_user = {
-            'username': form.get('username'),
-            'password': form.get('password'),
-        }
-
-        call_validate_user = requests.post(
-            url=f'{ api_base_url }/token/',
-            data=data_validate_user,
-        )
-
-        if call_validate_user.status_code == 200:
-            tokens = call_validate_user.json()
-            response = HttpResponseRedirect('/')
-            response.set_cookie(
-                key=f'{ token_name }_access',
-                value=tokens['access'],
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-            )
-            response.set_cookie(
-                key=f'{ token_name }_refresh',
-                value=tokens['refresh'],
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-            )
-
-            return response
-
-        elif call_validate_user.status_code == 401:
-            response = 'Incorrect username or password'
-            return render(request, 'login.html', {
-                    'user_staff_details': user_staff_details,
-                    'request': request,
-                    'response': response,
-                }
-            )
-        else:
-            response = call_validate_user.status_code
-            return render(request, 'login.html', {
-                    'user_staff_details': user_staff_details,
-                    'request': request,
-                    'response': response,
-                }
-            )
-
-    return render(request, 'login.html',{
-            'user_staff_details': user_staff_details,
-        }
-    )
-
-
-
-def logout(request):
-    user_staff_details = get_user_staff_details(request)
-
-    if user_staff_details['user']:
-        response = HttpResponseRedirect('/')
-        response.delete_cookie(f'{ token_name }_access')
-        response.delete_cookie(f'{ token_name }_refresh')
-        return response
-    return HttpResponseRedirect('/')
-
-
-
-def stats(request):
-    user_staff_details = get_user_staff_details(request)
-
-    if not user_staff_details['user']['is_staff']:
-        return HttpResponseRedirect('/')
-    elif user_staff_details['user']['is_staff'] and user_staff_details['refresh_required']:
-        return HttpResponseRedirect('/refresh/')
-    else:
-        pass
-
-    stats = requests.get(url=f'{ api_base_url }/stats/').json()
-
-    if request.method == 'POST':
-        form = request.POST
-        
-        name = form.get('name')
-        slug = form.get('slug')
-        value = form.get('value')
-        value = 1 if value == '' else int(value)
-
-        data = {
-            'name': name,
-            'slug': slug,
-            'value': value,
-        }
-
-        response = requests.post(
-            f'{ api_base_url }/stats/',
-            json=data,
-            headers=user_staff_details['headers']
-        )
-
-        return HttpResponseRedirect('/stats/')
-
-    return render(request, 'stats.html', {
-            'user_staff_details': user_staff_details,
-            'stats': stats,
-        }
-    )
 
 
 def upload_update(request):
@@ -185,7 +28,7 @@ def upload_update(request):
     headers = user_staff_details['headers']
 
     # For template, allows user to download w/o static file
-    expected_columns = UploadDetails.AddUpdateTournamentPlayers.expected_columns
+    expected_columns = AddUpdateTournamentPlayers.expected_columns
     request.session['template_headers'] = expected_columns
 
     tournaments = requests.get(url=f'{ api_base_url }/tournaments/').json()
@@ -211,7 +54,7 @@ def upload_update(request):
             df[column.strip().lower()] = df[column].map(lambda x: x.strip() if isinstance(x, str) else x)
 
         ### Data Validation Checks ###
-        upload_file_check = UploadDetails.AddUpdateTournamentPlayers(df, tournaments, teams)
+        upload_file_check = AddUpdateTournamentPlayers(df, tournaments, teams)
 
         file_checks = [
             upload_file_check.check_expected_columns(),
@@ -249,7 +92,7 @@ def upload_update(request):
 
         ### Upload New Players ###
 
-        # Check which players don't existws
+        # Check which players don't exist
         df['player_first_last_name_team_id_combo'] = ( df['player_first_name'].apply(lambda x: x.lower()) + ' ' + df['player_last_name'].apply(lambda x: x.lower()) + ' ' + df['team_id'].apply(lambda x: str(int(x))) )
         player_last_name_team_id_uploaded = df['player_first_last_name_team_id_combo'].tolist()
         player_last_name_team_id_existing = [ f'{ player["first_name"].lower() } { player["last_name"].lower() } { player["team"]["id"] }' for player in players ]
@@ -336,8 +179,6 @@ def upload_update(request):
         }
     )
 
-
-
 def upload_update_success(request):
     user_staff_details = get_user_staff_details(request)
 
@@ -378,8 +219,6 @@ def upload_update_success(request):
             'tournament_players_updated': tournament_players_updated,
         }
     )
-
-
 
 def download_upload_template(request):
     user_staff_details = get_user_staff_details(request)

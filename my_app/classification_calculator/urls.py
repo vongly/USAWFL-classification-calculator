@@ -1,22 +1,26 @@
 from django.urls import path
 
-from . import views, views_admin_tools
+from .views import (
+    auth_views,
+    main_views,
+    upload_views,
+    stats_views,
+)
 
 urlpatterns = [
-	path('refresh/', views_admin_tools.refresh_token),
+	path('refresh/', auth_views.refresh_token),
 
-	path('login/', views_admin_tools.login),
-	path('logout/', views_admin_tools.logout),
+	path('login/', auth_views.login),
+	path('logout/', auth_views.logout),
 
-	path('upload/', views_admin_tools.upload_update),
-	path('upload/success/', views_admin_tools.upload_update_success),
-	path('upload/template/', views_admin_tools.download_upload_template),
+	path('upload/', upload_views.upload_update),
+	path('upload/success/', upload_views.upload_update_success),
+	path('upload/template/', upload_views.download_upload_template),
 
-	path('stats/', views_admin_tools.stats),
+	path('stats/', stats_views.stats),
 
-
-	path('', views.home),
-	path('tournament/', views.tournament_list),
-	path('tournament/<slug:tournament_slug>/', views.tournament_teams),
-	path('tournament/<slug:tournament_slug>/<slug:team_slug>/', views.tournament_team_players),
+	path('', main_views.home),
+	path('tournament/', main_views.tournament_list),
+	path('tournament/<slug:tournament_slug>/', main_views.tournament_teams),
+	path('tournament/<slug:tournament_slug>/<slug:team_slug>/', main_views.tournament_team_players),
 ]

@@ -1,10 +1,9 @@
 README.md
 *.pyc
 *DS_Store
+*__pychache__
+
+*sqlite3
+*env.py
+
 venv/
-api_app/db.sqlite3
-api_app/usawfl.sqlite3
-api_app/env.py
-api_app/migrate_old_data.py
-my_app/db.sqlite3
-my_app/env.py

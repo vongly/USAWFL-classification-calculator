@@ -1,12 +1,11 @@
 from django.shortcuts import render, HttpResponseRedirect
 
-from env import api_base_url, token_name, API_KEY
-from GlobalFunctions import get_user_staff_details, delete_session_item
+from env import api_base_url
+from utils.helpers import get_user_staff_details, delete_session_item
 
 import requests
-
-from collections import defaultdict
 import json
+
 
 def home(request):
     user_staff_details = get_user_staff_details(request)
