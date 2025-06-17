@@ -4,7 +4,13 @@ import os
 import sys
 
 sys.path.append('../')
-from env import MY_SECRET_KEY, MY_ALLOWED_HOSTS, DEBUG_SETTING, FRONTEND_URL
+from env import (
+    MY_SECRET_KEY,
+    MY_ALLOWED_HOSTS,
+    DEBUG_SETTING,
+    FRONTEND_URL,
+    DATABASES,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -115,12 +121,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api_app.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = DATABASES
 
 AUTH_PASSWORD_VALIDATORS = [
     {
