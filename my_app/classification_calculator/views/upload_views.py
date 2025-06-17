@@ -66,6 +66,7 @@ def upload_update(request):
             upload_file_check.check_player_num_between_0_99(),
         ]
 
+        upload_error_message = None
         for response in file_checks:
             if response != None:
                 upload_error_message = response
