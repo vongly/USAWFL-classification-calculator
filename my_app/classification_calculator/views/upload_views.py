@@ -66,18 +66,18 @@ def upload_update(request):
             upload_file_check.check_player_num_between_0_99(),
         ]
 
-        if any(check is not None for check in file_checks):
-            for response in file_checks:
+        for response in file_checks:
+            if response != None:
                 upload_error_message = response
                 break
 
-            return render(request, 'upload_update.html', {
-                    'user_staff_details': user_staff_details,
-                    'tournaments': tournaments,
-                    'teams': teams,
-                    'upload_error_message': upload_error_message,
-                }
-            )
+        return render(request, 'upload_update.html', {
+                'user_staff_details': user_staff_details,
+                'tournaments': tournaments,
+                'teams': teams,
+                'upload_error_message': upload_error_message,
+            }
+        )
 
         upload_file_check.add_tournament_id_to_df()
         upload_file_check.add_team_id_to_df()

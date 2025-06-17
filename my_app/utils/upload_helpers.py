@@ -26,13 +26,13 @@ class AddUpdateTournamentPlayers:
 
     dtype_expected = {
         'tournament_city': 'object',
-        'tournament_year': 'float64',
+        'tournament_year': 'int64',
         'player_first_name': 'object',
         'player_last_name': 'object',
         'player_team_city': 'object',
         'player_team_name': 'object',
-        'player_number': 'float64',
-        'player_classification_value': 'float64',
+        'player_number': 'int64',
+        'player_classification_value': 'int64',
     }
 
     def __init__(self, df, tournaments, teams):
