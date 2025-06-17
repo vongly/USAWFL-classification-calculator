@@ -68,17 +68,17 @@ def upload_update(request):
 
         upload_error_message = None
         for response in file_checks:
-            if response != None:
+            if response:
                 upload_error_message = response
-                break
 
-        return render(request, 'upload_update.html', {
-                'user_staff_details': user_staff_details,
-                'tournaments': tournaments,
-                'teams': teams,
-                'upload_error_message': upload_error_message,
-            }
-        )
+                if upload_error_message:
+                    return render(request, 'upload_update.html', {
+                            'user_staff_details': user_staff_details,
+                            'tournaments': tournaments,
+                            'teams': teams,
+                            'upload_error_message': upload_error_message,
+                        }
+                    )
 
         upload_file_check.add_tournament_id_to_df()
         upload_file_check.add_team_id_to_df()

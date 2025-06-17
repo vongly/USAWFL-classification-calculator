@@ -63,8 +63,12 @@ class AddUpdateTournamentPlayers:
 
         for column, expected_dtype in self.dtype_expected.items():
             actual_dtype = self.df[column].dtype
+            if expected_dtype == 'int64':
+                try:
+                    self.df[column] = self.df[column].astype(int)
+                except:
+                    pass
             if actual_dtype != expected_dtype:
-                print(column, actual_dtype, expected_dtype)
                 wrong_dtype.append(column)
 
         if wrong_dtype:
