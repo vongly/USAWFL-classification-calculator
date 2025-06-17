@@ -3,7 +3,7 @@ from django.http import HttpResponse
 
 from env import api_base_url
 from utils.helpers import get_user_staff_details, delete_session_item
-import utils.upload_helpers as AddUpdateTournamentPlayers
+from utils.upload_helpers import AddUpdateTournamentPlayers
 
 import requests
 import pandas as pd
