@@ -93,7 +93,7 @@ class AddUpdateTournamentPlayers:
         self.df['team_city_name_combo'] = ( self.df['player_team_city'].apply(lambda x: x.lower()) + ' ' + self.df['player_team_name'].apply(lambda x: x.lower()) )
         teams_that_dont_exist = [ t for t in self.team_city_name_uploaded if t not in self.team_city_name_existing ]
         if teams_that_dont_exist:
-           return f'The following tournaments do not exist: { ", ".join(teams_that_dont_exist).title() }. Make sure that all uploaded team cities and corresponding teams exist. '
+           return f'The following teams do not exist: { ", ".join(teams_that_dont_exist).title() }. Make sure that all uploaded team cities and corresponding teams exist. '
         return None
 
     def check_class_values_between_1_to_5(self):
