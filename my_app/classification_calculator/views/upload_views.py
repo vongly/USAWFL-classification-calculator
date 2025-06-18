@@ -61,7 +61,7 @@ def upload_update(request):
             upload_file_check.check_all_fields_correct_dtype(),
             upload_file_check.check_for_blank_cells(),
             upload_file_check.check_if_tournaments_exists(),
-            upload_file_check.check_if_tournaments_exists(),
+            upload_file_check.check_if_teams_exists(),
             upload_file_check.check_class_values_between_1_to_5(),
             upload_file_check.check_player_num_between_0_99(),
         ]
