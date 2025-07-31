@@ -8,6 +8,8 @@ class Tournament(models.Model):
 	state = models.CharField(max_length=2)
 	date = models.DateField()
 	slug = models.SlugField(unique=True)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return '{} - {} - {}'.format(
@@ -25,6 +27,8 @@ class Team(models.Model):
 	city = models.CharField(max_length=50)
 	state = models.CharField(max_length=2)
 	slug = models.SlugField(unique=True)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return '{} {}'.format(self.city.__str__(), self.name.__str__())
@@ -38,6 +42,8 @@ class Player(models.Model):
 	first_name = models.CharField(max_length=50)
 	last_name = models.CharField(max_length=50)
 	team = models.ForeignKey(Team, on_delete=models.CASCADE)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return '{}, {} - {} {}'.format(
@@ -61,6 +67,8 @@ class TournamentPlayer(models.Model):
 	player = models.ForeignKey(Player, on_delete=models.CASCADE)
 	player_number = models.IntegerField()
 	classification_value = models.IntegerField()
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return '{}: {} #{} ({})'.format(
@@ -86,6 +94,8 @@ class Stat(models.Model):
 	value = models.IntegerField()
 	slug = models.SlugField(unique=True)
 	is_active = models.BooleanField(default=True)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return self.name
@@ -99,6 +109,8 @@ class PlayerStat(models.Model):
 	tournament_player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
 	stat = models.ForeignKey(Stat, on_delete=models.CASCADE)
 	opponent = models.ForeignKey(Team, on_delete=models.CASCADE)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
 		return '{} {} - {} {} - {}: #{} {}, {} vs {} {}'.format(
