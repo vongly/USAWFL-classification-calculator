@@ -61,6 +61,28 @@ class Player(models.Model):
 			'first_name',
 		]
 
+class Veteran(models.Model):
+	id = models.AutoField(primary_key=True)
+	player = models.ForeignKey(Player, on_delete=models.CASCADE)
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
+
+	def __str__(self):
+		return '{}, {} - {} {}'.format(
+			self.player.last_name.__str__(),
+			self.player.first_name.__str__(),
+			self.player.team.city.__str__(),
+			self.player.team.name.__str__(),
+		)
+
+	class Meta:
+		ordering = [
+			'player__team__city',
+			'player__team__name',
+			'player__last_name',
+			'player__first_name',
+		]
+
 class TournamentPlayer(models.Model):
 	id = models.AutoField(primary_key=True)
 	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
