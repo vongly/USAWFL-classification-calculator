@@ -24,6 +24,7 @@ urlpatterns = [
 
     #   Players
     path('players/', views.PlayerList.as_view()),
+    path('veterans/', views.VeteranList.as_view()),
 
     #   TournamentPlayers
     path('tournament_players/', views.TournamentPlayerList.as_view()),

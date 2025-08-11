@@ -42,6 +42,19 @@ class PlayerCreateSerializer(serializers.ModelSerializer):
         model = models.Player
         fields = '__all__'
 
+class VeteranSerializer(serializers.ModelSerializer):
+    player = PlayerSerializer(read_only=True)
+
+    class Meta:
+        model = models.Veteran
+        fields = '__all__'
+
+class VeteranCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Veteran
+        fields = '__all__'
+
 class TournamentPlayerSerializer(serializers.ModelSerializer):
     tournament = TournamentSerializer()
     player = PlayerSerializer(read_only=True)

@@ -153,6 +153,64 @@ class PlayerList(ListCreateAPIView):
             return []
         return [IsStaffUser()]
 
+class VeteranList(ListCreateAPIView):
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            serializer_class = serializers.VeteranSerializer
+            return serializer_class
+        serializer_class = serializers.VeteranCreateSerializer
+        return serializer_class
+
+    def get_queryset(self):
+        team_slugs = self.request.query_params.getlist('team', None)
+        player_ids = self.request.query_params.getlist('pid', None)
+
+        if team_slugs and player_ids:
+            try:
+                player_ids = [ int(player_id) for player_id in player_ids ]
+                queryset = models.Veteran.objects.filter(Player__Team__slug__in=team_slugs, Player__id__in=player_ids)
+            except:
+                queryset = models.Veteran.objects.filter(Player__Team__slug__in=team_slugs)
+        elif team_slugs:
+            queryset = models.Veteran.objects.filter(Player__Team__slug__in=team_slugs)
+        elif player_ids:
+            try:
+                player_ids = [ int(player_id) for player_id in player_ids ]
+                queryset = models.Veteran.objects.filter(Player__id__in=player_ids)
+            except:
+                pass
+        else:
+            queryset = models.Veteran.objects.all()
+        
+        queryset = queryset.order_by('player__team__name', 'player__last_name', 'player__first_name')
+
+        return queryset
+
+
+    def create(self, request, *args, **kwargs):
+        
+        is_many = isinstance(request.data, list)
+
+        if is_many and len(request.data) == 0:
+            return Response([], status=status.HTTP_201_CREATED)
+        
+        else:
+            serializer = self.get_serializer(data=request.data, many=is_many)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsStaffUser()]
+
 # TournamentPlayers
 
 class TournamentPlayerList(ListAPIView):
