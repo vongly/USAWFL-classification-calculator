@@ -116,8 +116,8 @@
 							</label>
 						</div>
 					</div>
-				
-					{% if user_staff_details.user and stats %}
+					
+					{% if user_staff_details.user and stats and submit_details.opponent_selected >= 0 %}
 						<div class="toggle-container initiallyHidden" id="toggle-element-{{ tournament_player.id }}">
 							{% for stat in stats %}
 								<div class="grid-row stat-row">

@@ -8,6 +8,13 @@ class IsStaffUser(BasePermission):
         else:
             return False
 
+class IsUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return True
+        else:
+            return False
+    
 class CreateOnlyAuthenticated(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:

@@ -45,7 +45,7 @@ def tournament_teams(request, tournament_slug):
 
 def tournament_team_players(request, tournament_slug, team_slug):
     user_staff_details = get_user_staff_details(request)
-    
+
     if 'submit_details' in request.session:
         submit_details = request.session['submit_details']
         delete_session_item(request, 'submit_details')
@@ -121,7 +121,6 @@ def tournament_team_players(request, tournament_slug, team_slug):
 
             return HttpResponseRedirect(f'/tournament/{ tournament_slug }/{ team_slug }/')
         return HttpResponseRedirect(f'/tournament/{ tournament_slug }/{ team_slug }/')
-
     return render(request, 'tournament_team_players.html', {
             'user_staff_details': user_staff_details,
             'tournament_slug': tournament_slug,

@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 from rest_framework import permissions
-from .permissions import IsStaffUser, CreateOnlyAuthenticated
+from .permissions import IsStaffUser, IsUser, CreateOnlyAuthenticated
 
 from rest_framework import status
 from rest_framework.generics import (
@@ -395,3 +395,8 @@ class PlayerStatList(ListCreateAPIView):
             queryset = models.PlayerStat.objects.all()
 
         return queryset
+
+    def get_permissions(self):
+        if self.request.method in ['GET', 'POST', 'HEAD', 'OPTIONS']:
+            return []
+        return [IsUser()]
