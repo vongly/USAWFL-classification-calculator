@@ -30,7 +30,7 @@
 			{% endif %}
 		</div>
 		<div class="input-field col l2 m2 s6">
-			<select id="opponent-selected" name="opponent-selected">
+			<select class="browser-default" id="opponent-selected" name="opponent-selected">
 				<option value="" disabled selected>Select Opponent</option>
 				{% for opponent in possible_opponents %}
 					<option value="{{ opponent.id }}" {% if submit_details.opponent_selected == opponent.id %}selected{% endif %}>{{ opponent.city }} {{ opponent.name }}</option>
