@@ -60,6 +60,7 @@ class TournamentRecord(RetrieveAPIView):
 
 # Teams
 
+# FILTERS: tournament=tournament_slug, team=team_slug (list accepted),
 class TeamList(ListCreateAPIView):
     serializer_class = serializers.TeamSerializer
     
@@ -95,6 +96,7 @@ class TeamRecord(RetrieveAPIView):
 
 # Players
 
+# FILTERS: team=team_slug, pid=player_id
 class PlayerList(ListCreateAPIView):
 
     def get_serializer_class(self):
@@ -213,6 +215,7 @@ class VeteranList(ListCreateAPIView):
 
 # TournamentPlayers
 
+# FILTERS: tpid=tournament_id (list accepted), pid=player_id (list accepted), team=team_slug (list accepted)
 class TournamentPlayerList(ListAPIView):
     
     def get_serializer_class(self):
@@ -334,6 +337,7 @@ class StatList(ListCreateAPIView):
         return [IsStaffUser()]
 
 
+# FILTERS: tournament=tournament_slug, team=team_slug (list accepted), stat=stat_slug (list accepted)
 class PlayerStatList(ListCreateAPIView):
 
     def get_serializer_class(self):
