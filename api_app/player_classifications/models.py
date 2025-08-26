@@ -20,6 +20,9 @@ class Tournament(models.Model):
 
 	class Meta:
 		ordering = ['-year','-number']
+		indexes = [
+            models.Index(fields=['slug'], name='ix_tournament__slug'),
+        ]
 
 class Team(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -35,7 +38,9 @@ class Team(models.Model):
 
 	class Meta:
 		ordering = ['city', 'name',]
-
+		indexes = [
+            models.Index(fields=['slug'], name='ix_team__slug'),
+        ]
 
 class Player(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -60,6 +65,9 @@ class Player(models.Model):
 			'last_name',
 			'first_name',
 		]
+		indexes = [
+            models.Index(fields=['team_id'], name='ix_players__team_id'),
+        ]
 
 class Veteran(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -109,6 +117,9 @@ class TournamentPlayer(models.Model):
 			'player__last_name',
 			'player__first_name',
 		]
+		indexes = [
+            models.Index(fields=['tournament_id','player_id'], name='ix_tp__tid_pid'),
+        ]
 
 class Stat(models.Model):
 	id = models.AutoField(primary_key=True)
