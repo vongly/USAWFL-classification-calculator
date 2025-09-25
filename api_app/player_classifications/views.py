@@ -248,7 +248,7 @@ class TournamentPlayerList(ListAPIView):
         else:
             queryset = models.TournamentPlayer.objects.all()
         
-        queryset = queryset.order_by('-tournament__year','-tournament__number','player__team__name','player_number')
+        queryset = queryset.select_related('tournament', 'player__team').order_by('-tournament__year','-tournament__number','player__team__name','player_number')
 
         return queryset
 
