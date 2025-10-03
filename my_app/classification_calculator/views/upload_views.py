@@ -84,8 +84,8 @@ def upload_update(request):
         upload_file_check.add_team_id_to_df()
         upload_file_check.convert_dtype()
 
-        tournament_slugs = upload_file_check.create_tournament_slugs_list()
-        team_slugs = upload_file_check.create_team_slugs_list()
+        tournament_slugs = list(set(upload_file_check.create_tournament_slugs_list()))
+        team_slugs = list(set(upload_file_check.create_team_slugs_list()))
 
         tournament_teams_filter_string = f'?tournament={ "&tournament=".join(tournament_slugs) }&team={ "&team=".join(team_slugs) }'
         tournament_players = requests.get(url=f'{ api_base_url }/tournament_players/{ tournament_teams_filter_string }').json()
